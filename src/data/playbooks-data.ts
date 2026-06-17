@@ -8,6 +8,7 @@ import abandonoCarrinhoPorProduto from "@/content/playbooks/analise/abandono-de-
 import compraCanceladaNaoDevolvida from "@/content/playbooks/analise/compra-cancelada-nao-devolvida.md?raw";
 import renovacaoAssinaturaFalhada from "@/content/playbooks/analise/renovacao-da-assinatura-falhada.md?raw";
 import prontidaoVendasAdicionais from "@/content/playbooks/analise/prontidao-vendas-adicionais-baixo-custo.md?raw";
+import concluinteCursoSemCompra from "@/content/playbooks/analise/concluinte-do-curso-sem-compra-recente.md?raw";
 
 export interface Playbook {
   /** Rótulo do grupo (ex: "Resgate · recuperação de vendas") */
@@ -232,6 +233,47 @@ export const playbooks: Record<string, Playbook> = {
     ],
     body: prontidaoVendasAdicionais,
     resultId: "low-cost-buyer-readiness",
+  },
+
+  "/analise/esteira-subir-de-ticket/concluinte-do-curso-sem-compra-recente": {
+    group: "Esteira · subir de ticket",
+    groupEmoji: "🎯",
+    agent: "Cassio + Diego",
+    title: "concluinte-do-curso-sem-compra-recente",
+    summary:
+      "Use quando o usuário solicitar leads que concluíram um curso e não fizeram nenhuma compra paga recentemente.",
+    gatilhos: [
+      "terminou meu curso e não comprou nada novo",
+      "aluno terminou o curso",
+      "quem terminou e não comprou",
+      "completou o curso",
+      "próximo passo pro aluno",
+      "Curso concluído",
+      "Terminei meu curso",
+      "Concluintes sem compra",
+    ],
+    perguntas: [
+      "Quem terminou meu curso e não comprou nada novo?",
+      "Lista de alunos que completaram o curso e ainda não fizeram um upsell.",
+      "Concluintes do curso sem compra recente — quero oferecer o próximo passo.",
+      "Quem terminou o curso nos últimos meses e está quente pra comprar mais?",
+      "Me mostra os alunos que concluíram e não compraram nada nos últimos 30 dias.",
+    ],
+    ferramentas: [
+      "lista_de_atividades_do_sistema",
+      "lista_de_conteudo",
+      "content_get",
+      "detalhes_da_sala_de_aula",
+      "painel_minhas_vendas",
+      "lista_de_usuarios_membros_por_sala_de_classe",
+      "member_users_get_progress_by_lead",
+      "member_users_get_course_progress",
+      "leads_pagamentos",
+      "pergunta",
+      "executar",
+    ],
+    body: concluinteCursoSemCompra,
+    resultId: "course-completer-no-recent-purchase",
   },
 };
 

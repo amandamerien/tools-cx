@@ -374,10 +374,9 @@ export function RecommendationCTA({
     <button
       type="button"
       className={cn(
-        "group/cta flex w-full items-center justify-center gap-2 rounded-[11px] px-4 py-3 text-sm font-semibold transition-[filter] duration-200 hover:brightness-[1.03] active:brightness-95",
-        variant === "primary" && tone === "brand" && "gradient-brand text-[hsl(200_40%_10%)]",
-        variant === "primary" && tone !== "brand" && cn("bg-gradient-to-r text-black/85", t.bar),
-        variant === "soft" && cn("border", t.border, t.bg, t.text),
+        "group/cta flex w-full items-center justify-center gap-2 rounded-[11px] px-4 py-3 text-sm font-semibold transition-colors duration-200",
+        variant === "primary" && "bg-foreground text-background hover:bg-foreground/90 active:bg-foreground/80",
+        variant === "soft" && cn("border", t.border, t.bg, t.text, "hover:brightness-110"),
         className,
       )}
       {...props}

@@ -1,5 +1,5 @@
 import { Fragment, type ComponentType, type ReactNode } from "react";
-import { ArrowRight, AlertTriangle } from "lucide-react";
+import { ArrowRight, AlertTriangle, GraduationCap } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
@@ -109,7 +109,7 @@ function GradientCTA({ label }: { label: string }) {
   return (
     <button
       type="button"
-      className="gradient-brand group/cta mt-6 flex w-full items-center justify-center gap-2 rounded-[11px] px-4 py-3 text-sm font-semibold text-[hsl(200_40%_10%)] transition-[filter] duration-200 hover:brightness-[1.03] active:brightness-95"
+      className="group/cta mt-6 flex w-full items-center justify-center gap-2 rounded-[11px] bg-foreground px-4 py-3 text-sm font-semibold text-background transition-colors duration-200 hover:bg-foreground/90 active:bg-foreground/80"
     >
       {label}
       <ArrowRight className="size-4 transition-transform duration-200 group-hover/cta:translate-x-0.5" />
@@ -1726,6 +1726,221 @@ function LowCostBuyerReadinessResult() {
   );
 }
 
+/* ════════════════════════════════════════════════════════════════════════
+   course-completer-no-recent-purchase — concluintes quentes pro próximo passo
+   ════════════════════════════════════════════════════════════════════════ */
+
+interface Completer {
+  name: string;
+  email: string;
+  completedAgo: string;
+  noBuyAgo: string;
+}
+
+const completers: Completer[] = [
+  { name: "Marina Alves", email: "marina.alves@gmail.com", completedAgo: "há 2d", noBuyAgo: "2 dias" },
+  { name: "Diego Martins", email: "diego.m@outlook.com", completedAgo: "há 3d", noBuyAgo: "3 dias" },
+  { name: "Beatriz Lima", email: "bia.lima@gmail.com", completedAgo: "há 5d", noBuyAgo: "5 dias" },
+  { name: "Rafael Souza", email: "rafael.souza@hotmail.com", completedAgo: "há 6d", noBuyAgo: "6 dias" },
+  { name: "Camila Rocha", email: "camila.rocha@gmail.com", completedAgo: "há 8d", noBuyAgo: "8 dias" },
+  { name: "Lucas Pereira", email: "lucas.pereira@gmail.com", completedAgo: "há 11d", noBuyAgo: "11 dias" },
+];
+
+const completerStats = { course: "Workshop de Lançamento", completersCount: 38, recentBuyersCount: 14, resultCount: 24 };
+const completerTools = ["lista_de_atividades_do_sistema", "lista_de_conteudo", "painel_minhas_vendas", "executar"];
+
+function CompleterFrame({ children }: { children: ReactNode }) {
+  return (
+    <ResultFrame orchestration="COURSE_COMPLETER_NO_RECENT_PURCHASE" tag="Membros" tools={completerTools}>
+      {children}
+    </ResultFrame>
+  );
+}
+
+function CourseChip() {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-400">
+      <GraduationCap className="size-3" />
+      {completerStats.course}
+    </span>
+  );
+}
+
+/* ── C1 — Lista de concluintes ──────────────────────────────────────── */
+function CC1List() {
+  return (
+    <CompleterFrame>
+      <p className="text-xs italic leading-relaxed text-muted-foreground">
+        “Alunos que concluíram o curso (qualquer data) e não compraram nada nos
+        últimos 30 dias — quentes pro próximo passo.”
+      </p>
+      <div className="mt-3 flex flex-wrap items-end gap-x-2 gap-y-1">
+        <span className="gradient-text text-4xl font-bold tracking-tight">24</span>
+        <span className="mb-1 text-base font-medium text-foreground">concluintes prontos</span>
+      </div>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <CourseChip />
+        <span className="text-xs text-muted-foreground">de 38 concluintes · 14 já compraram (fora)</span>
+      </div>
+      <ul className="mt-4 flex flex-col gap-px">
+        {completers.slice(0, 5).map((c) => (
+          <li key={c.email} className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-accent/50">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">{initials(c.name)}</span>
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm font-medium text-foreground">{c.name}</div>
+              <div className="truncate text-xs text-muted-foreground">{c.email}</div>
+            </div>
+            <div className="shrink-0 text-right">
+              <div className="text-sm font-medium text-emerald-400">concluiu {c.completedAgo}</div>
+              <div className="text-xs text-muted-foreground">sem comprar há {c.noBuyAgo}</div>
+            </div>
+          </li>
+        ))}
+      </ul>
+      <button type="button" className="mt-1 px-2 text-sm font-medium text-brand hover:underline">+ 19 concluintes</button>
+      <GradientCTA label="Convidar pro webinar de transição · opt-in" />
+    </CompleterFrame>
+  );
+}
+
+/* ── C2 — Cards de pessoas ──────────────────────────────────────────── */
+function CC2Cards() {
+  return (
+    <CompleterFrame>
+      <div className="flex flex-wrap items-baseline gap-2">
+        <span className="gradient-text text-2xl font-bold">24 concluintes</span>
+        <CourseChip />
+      </div>
+      <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
+        {completers.map((c) => (
+          <div key={c.email} className="rounded-xl border border-border bg-card/40 p-3">
+            <div className="flex items-center gap-2.5">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">{initials(c.name)}</span>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-medium text-foreground">{c.name}</div>
+                <div className="truncate text-xs text-muted-foreground">{c.email}</div>
+              </div>
+            </div>
+            <div className="mt-2.5 flex items-center justify-between">
+              <span className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 text-[11px] font-medium text-emerald-400">concluiu {c.completedAgo}</span>
+              <span className="text-xs text-muted-foreground">sem comprar há {c.noBuyAgo}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      <GradientCTA label="Criar sequência de upsell · opt-in" />
+    </CompleterFrame>
+  );
+}
+
+/* ── C3 — Funil ─────────────────────────────────────────────────────── */
+function CC3Funnel() {
+  const steps = [
+    { label: "Concluíram o curso", value: 38, pct: 100 },
+    { label: "Já compraram (saem)", value: 14, pct: 37 },
+    { label: "Prontos (sem compra)", value: 24, pct: 63 },
+  ];
+  return (
+    <CompleterFrame>
+      <div className="flex flex-wrap items-baseline gap-2">
+        <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Funil de upsell · conclusão → compra</span>
+      </div>
+      <div className="mt-3"><CourseChip /></div>
+      <div className="mt-4 flex flex-col gap-3">
+        {steps.map((s) => (
+          <div key={s.label}>
+            <div className="mb-1.5 flex items-center justify-between text-sm">
+              <span className="font-medium text-foreground">{s.label}</span>
+              <span className="tabular-nums text-muted-foreground">{s.value} · {s.pct}%</span>
+            </div>
+            <div className="h-2.5 overflow-hidden rounded-full bg-muted">
+              <div className="gradient-brand h-full rounded-full" style={{ width: `${s.pct}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="mt-4 text-xs text-muted-foreground">↳ 24 terminaram e não voltaram a comprar — o upsell mais barato e mais ignorado.</p>
+      <GradientCTA label="Ver os 24 concluintes" />
+    </CompleterFrame>
+  );
+}
+
+/* ── C4 — Tabela ────────────────────────────────────────────────────── */
+function CC4Table() {
+  return (
+    <CompleterFrame>
+      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-2">
+        <span className="gradient-text text-2xl font-bold">24 concluintes</span>
+        <span className="text-xs text-muted-foreground">de 38 · 14 já compraram</span>
+      </div>
+      <div className="mb-3"><CourseChip /></div>
+      <div className="overflow-x-auto rounded-lg border border-border">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
+              <th className="px-3 py-2 font-medium">Aluno</th>
+              <th className="px-3 py-2 text-right font-medium">Concluiu</th>
+              <th className="px-3 py-2 text-right font-medium">Sem comprar há</th>
+            </tr>
+          </thead>
+          <tbody>
+            {completers.map((c) => (
+              <tr key={c.email} className="border-b border-border last:border-0 hover:bg-accent/40">
+                <td className="px-3 py-2">
+                  <div className="font-medium text-foreground">{c.name}</div>
+                  <div className="text-xs text-muted-foreground">{c.email}</div>
+                </td>
+                <td className="px-3 py-2 text-right text-emerald-400">{c.completedAgo}</td>
+                <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">{c.noBuyAgo}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <GradientCTA label="Exportar concluintes · opt-in" />
+    </CompleterFrame>
+  );
+}
+
+/* ── C5 — Métrica + curso ───────────────────────────────────────────── */
+function CC5Metric() {
+  return (
+    <CompleterFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Concluintes sem upsell · curso</p>
+      <div className="mt-2 flex items-end gap-2">
+        <span className="gradient-text text-5xl font-bold tracking-tight">24</span>
+        <span className="mb-1.5 text-sm text-muted-foreground">de 38 concluintes</span>
+      </div>
+      <div className="mt-3"><CourseChip /></div>
+      <div className="mt-5 flex flex-col divide-y divide-border overflow-hidden rounded-lg border border-border">
+        {[
+          { l: "Concluíram o curso", v: "38" },
+          { l: "Compraram nos últimos 30d", v: "14" },
+          { l: "Residual (prontos)", v: "24", hi: true },
+        ].map((r) => (
+          <div key={r.l} className="flex items-center justify-between p-3 text-sm">
+            <span className="text-muted-foreground">{r.l}</span>
+            <span className={cn("font-medium tabular-nums", r.hi ? "text-brand" : "text-foreground")}>{r.v}</span>
+          </div>
+        ))}
+      </div>
+      <GradientCTA label="Convidar pro próximo passo · opt-in" />
+    </CompleterFrame>
+  );
+}
+
+function CourseCompleterResult() {
+  return (
+    <div className="flex flex-col gap-9">
+      <Variation n={1} title="Lista de concluintes"><CC1List /></Variation>
+      <Variation n={2} title="Cards de pessoas"><CC2Cards /></Variation>
+      <Variation n={3} title="Funil de upsell"><CC3Funnel /></Variation>
+      <Variation n={4} title="Tabela"><CC4Table /></Variation>
+      <Variation n={5} title="Métrica + curso"><CC5Metric /></Variation>
+    </div>
+  );
+}
+
 /** Registro: id do componente → componente de resultado. */
 export const resultComponents: Record<string, ComponentType> = {
   "card-declined-recovery-list": CardDeclinedRecoveryResult,
@@ -1734,6 +1949,7 @@ export const resultComponents: Record<string, ComponentType> = {
   "canceled-purchase-not-returned": CanceledPurchaseResult,
   "subscription-renewal-failed": SubscriptionRenewalResult,
   "low-cost-buyer-readiness": LowCostBuyerReadinessResult,
+  "course-completer-no-recent-purchase": CourseCompleterResult,
 };
 
 export function getResultComponent(id: string): ComponentType | undefined {
