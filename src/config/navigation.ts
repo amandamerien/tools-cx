@@ -97,7 +97,7 @@ export const navigation: NavSection[] = [
         children: [
           { title: "lista de recuperação de cartão" },
           { title: "boleto pendente / pix por dia" },
-          { title: "abandono de carrinho por período" },
+          { title: "abandono de carrinho por produto" },
           { title: "compra cancelada — não devolvida" },
           { title: "renovação da assinatura falhada" },
         ],

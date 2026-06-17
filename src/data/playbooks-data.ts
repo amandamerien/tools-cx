@@ -4,6 +4,7 @@
  */
 import listaRecuperacaoCartao from "@/content/playbooks/analise/lista-de-recuperacao-de-cartao.md?raw";
 import boletoPendentePixPorDia from "@/content/playbooks/analise/boleto-pendente-pix-por-dia.md?raw";
+import abandonoCarrinhoPorProduto from "@/content/playbooks/analise/abandono-de-carrinho-por-produto.md?raw";
 
 export interface Playbook {
   /** Rótulo do grupo (ex: "Resgate · recuperação de vendas") */
@@ -89,6 +90,41 @@ export const playbooks: Record<string, Playbook> = {
     ],
     body: boletoPendentePixPorDia,
     resultId: "pending-pix-boleto-by-day",
+  },
+
+  "/analise/resgate-recuperacao-de-vendas/abandono-de-carrinho-por-produto": {
+    group: "Resgate · recuperação de vendas",
+    groupEmoji: "💳",
+    agent: "Rebeca",
+    title: "abandono de carrinho por produto",
+    summary:
+      "Use esta ferramenta quando o usuário for questionado sobre quais leads abandonaram o carrinho antes de finalizar a compra, agrupados por produto, com um alerta de atrito quando o abandono superar as vendas pagas.",
+    gatilhos: [
+      "abandonaram o checkout",
+      "abandono de checkout",
+      "carrinho abandonado",
+      "agrupa por produto",
+      "não finalizou a compra",
+      "abandono de caixa",
+    ],
+    perguntas: [
+      "Quais leads abandonaram o checkout antes de finalizar — agrupa por produto.",
+      "Quem chegou no carrinho e não comprou? Separa por produto pra eu ver onde tá vazando.",
+      "Lista de abandono de checkout dos últimos 30 dias, agrupada por produto.",
+      "Quais produtos têm mais abandono que venda? Me mostra os leads de cada um.",
+      "Carrinho abandonado por produto — e me avisa se tem produto com fricção no checkout.",
+    ],
+    ferramentas: [
+      "painel_minhas_vendas",
+      "esquema_de_filtro_de_leads",
+      "leads_search",
+      "lista_de_atividades_do_sistema",
+      "leads_produtos_comuns",
+      "pergunta",
+      "executar",
+    ],
+    body: abandonoCarrinhoPorProduto,
+    resultId: "checkout-abandonment-by-product",
   },
 };
 

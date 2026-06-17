@@ -1,5 +1,5 @@
 import { Fragment, type ComponentType, type ReactNode } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
@@ -631,10 +631,300 @@ function BoletoPendingByDayResult() {
   );
 }
 
+/* ════════════════════════════════════════════════════════════════════════
+   checkout-abandonment-by-product — leads por produto + alerta de fricção
+   ════════════════════════════════════════════════════════════════════════ */
+
+interface ProdLead {
+  name: string;
+  email: string;
+  value: number;
+  age: string;
+}
+interface Product {
+  productName: string;
+  leadCount: number;
+  paidCount: number;
+  ratio: number | null;
+  frictionAlert: boolean;
+  totalAttemptedValue: number;
+  hiddenCount: number;
+  leads: ProdLead[];
+}
+
+const abandonProducts: Product[] = [
+  { productName: "Mentoria Pro", leadCount: 52, paidCount: 48, ratio: 1.1, frictionAlert: false, totalAttemptedValue: 28044, hiddenCount: 50, leads: [
+    { name: "Marina Alves", email: "marina.alves@gmail.com", value: 197, age: "há 3h" },
+    { name: "Bruno Costa", email: "bruno.costa@gmail.com", value: 297, age: "há 1d" },
+  ]},
+  { productName: "Curso Express", leadCount: 44, paidCount: 49, ratio: 0.9, frictionAlert: false, totalAttemptedValue: 13068, hiddenCount: 42, leads: [
+    { name: "Camila Rocha", email: "camila.rocha@gmail.com", value: 297, age: "há 5h" },
+    { name: "Lucas Pereira", email: "lucas.pereira@gmail.com", value: 197, age: "há 2d" },
+  ]},
+  { productName: "Imersão Vendas", leadCount: 31, paidCount: 8, ratio: 3.9, frictionAlert: true, totalAttemptedValue: 15407, hiddenCount: 29, leads: [
+    { name: "Rafael Souza", email: "rafael.souza@hotmail.com", value: 497, age: "há 8h" },
+    { name: "Fernanda Dias", email: "fe.dias@gmail.com", value: 497, age: "há 1d" },
+  ]},
+  { productName: "Ebook Tráfego", leadCount: 29, paidCount: 33, ratio: 0.9, frictionAlert: false, totalAttemptedValue: 6807, hiddenCount: 27, leads: [
+    { name: "Beatriz Lima", email: "bia.lima@gmail.com", value: 97, age: "há 4h" },
+    { name: "André Luiz", email: "andre.luiz@hotmail.com", value: 97, age: "há 3d" },
+  ]},
+  { productName: "Programa Anual", leadCount: 28, paidCount: 9, ratio: 3.1, frictionAlert: true, totalAttemptedValue: 36372, hiddenCount: 26, leads: [
+    { name: "Diego Martins", email: "diego.m@outlook.com", value: 1297, age: "há 6h" },
+    { name: "Patrícia Gomes", email: "paty.gomes@gmail.com", value: 1297, age: "há 2d" },
+  ]},
+];
+
+const abandonTools = ["painel_minhas_vendas", "leads_search", "leads_produtos_comuns", "executar"];
+
+function AbandonFrame({ children }: { children: ReactNode }) {
+  return (
+    <ResultFrame orchestration="CHECKOUT_ABANDONMENT_BY_PRODUCT" tools={abandonTools}>
+      {children}
+    </ResultFrame>
+  );
+}
+
+function AbandonPremise() {
+  return (
+    <p className="text-xs italic leading-relaxed text-muted-foreground">
+      “Leads em abandoned_cart com tentativa de pagamento nos últimos 30 dias,
+      agrupados pelo produto da última tentativa.”
+    </p>
+  );
+}
+
+function RatioChip({ p }: { p: Product }) {
+  return (
+    <span
+      className={cn(
+        "rounded-full border px-2 py-0.5 text-[11px] font-medium tabular-nums",
+        p.frictionAlert
+          ? "border-red-500/30 bg-red-500/10 text-red-400"
+          : "border-border bg-muted/60 text-muted-foreground",
+      )}
+    >
+      {p.ratio != null ? `${p.ratio}× aband./venda` : "sem venda"}
+    </span>
+  );
+}
+
+/* ── A1 — Blocos por produto ────────────────────────────────────────── */
+function AV1Blocks() {
+  return (
+    <AbandonFrame>
+      <AbandonPremise />
+      <div className="mt-3 flex flex-wrap items-end gap-x-2 gap-y-1">
+        <span className="gradient-text text-4xl font-bold tracking-tight">184</span>
+        <span className="mb-1 text-base font-medium text-foreground">pessoas · {BRL(99698)} · 5 produtos</span>
+        <span className="mb-1 rounded-full border border-red-500/30 bg-red-500/10 px-2 py-0.5 text-xs font-medium text-red-400">2 com fricção</span>
+      </div>
+      <div className="mt-5 flex flex-col gap-3">
+        {abandonProducts.map((p) => (
+          <div key={p.productName} className={cn("rounded-lg border bg-card/40 p-3.5", p.frictionAlert ? "border-red-500/30" : "border-border")}>
+            <div className="flex items-center justify-between gap-2">
+              <span className="flex items-center gap-1.5 font-medium text-foreground">
+                {p.frictionAlert && <AlertTriangle className="size-4 text-red-400" />}
+                {p.productName}
+              </span>
+              <RatioChip p={p} />
+            </div>
+            <div className="mt-1.5 text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">{p.leadCount} leads</span> · {p.paidCount} pagas · {BRL(p.totalAttemptedValue)}
+            </div>
+            <ul className="mt-2 flex flex-col gap-1">
+              {p.leads.slice(0, 2).map((l) => (
+                <li key={l.email} className="flex items-center justify-between text-xs">
+                  <span className="text-foreground">{l.name}</span>
+                  <span className="text-muted-foreground">{BRL(l.value)} · {l.age}</span>
+                </li>
+              ))}
+            </ul>
+            {p.hiddenCount > 0 && <div className="mt-1.5 text-xs font-medium text-brand">+ {p.hiddenCount} leads</div>}
+          </div>
+        ))}
+      </div>
+      <GradientCTA label="Auditar checkout dos produtos com fricção" />
+    </AbandonFrame>
+  );
+}
+
+/* ── A2 — Alerta de fricção (hero) ──────────────────────────────────── */
+function AV2Friction() {
+  const friction = abandonProducts.filter((p) => p.frictionAlert).sort((a, b) => (b.ratio || 0) - (a.ratio || 0));
+  const max = Math.max(...abandonProducts.map((p) => p.leadCount));
+  return (
+    <AbandonFrame>
+      <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4">
+        <div className="flex items-center gap-2 text-red-400">
+          <AlertTriangle className="size-4" />
+          <span className="text-sm font-semibold">{friction.length} produtos com fricção no checkout</span>
+        </div>
+        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+          Antes de recuperar esses leads, vale auditar o checkout — recuperar gente
+          pra um checkout quebrado queima a melhor lista do mês.
+        </p>
+      </div>
+      <div className="mt-4 flex flex-col gap-4">
+        {friction.map((p) => (
+          <div key={p.productName}>
+            <div className="mb-1.5 flex items-center justify-between text-sm">
+              <span className="font-medium text-foreground">{p.productName}</span>
+              <span className="font-mono text-xs text-red-400">{p.ratio}× aband./venda</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                <div className="h-full rounded-full bg-gradient-to-r from-red-500 to-red-400" style={{ width: `${(p.leadCount / max) * 100}%` }} />
+              </div>
+              <span className="tabular-nums">{p.leadCount} aband. · {p.paidCount} pagas</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      <GradientCTA label="Ver leads dos produtos com fricção" />
+    </AbandonFrame>
+  );
+}
+
+/* ── A3 — Barras abandono × venda ───────────────────────────────────── */
+function AV3Bars() {
+  const max = Math.max(...abandonProducts.flatMap((p) => [p.leadCount, p.paidCount]));
+  return (
+    <AbandonFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+        Abandono × venda paga · por produto
+      </p>
+      <div className="mt-4 flex flex-col gap-4">
+        {abandonProducts.map((p) => (
+          <div key={p.productName}>
+            <div className="mb-1.5 flex items-center justify-between text-sm">
+              <span className="flex items-center gap-1.5 font-medium text-foreground">
+                {p.frictionAlert && <AlertTriangle className="size-3.5 text-red-400" />}
+                {p.productName}
+              </span>
+              <RatioChip p={p} />
+            </div>
+            <div className="flex items-center gap-2 text-[11px]">
+              <span className="w-16 text-right text-muted-foreground">abandono</span>
+              <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                <div className={cn("h-full rounded-full bg-gradient-to-r", p.frictionAlert ? "from-red-500 to-red-400" : "from-amber-400 to-amber-300")} style={{ width: `${(p.leadCount / max) * 100}%` }} />
+              </div>
+              <span className="w-6 tabular-nums text-muted-foreground">{p.leadCount}</span>
+            </div>
+            <div className="mt-1 flex items-center gap-2 text-[11px]">
+              <span className="w-16 text-right text-muted-foreground">paga</span>
+              <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                <div className="gradient-brand h-full rounded-full" style={{ width: `${(p.paidCount / max) * 100}%` }} />
+              </div>
+              <span className="w-6 tabular-nums text-muted-foreground">{p.paidCount}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      <GradientCTA label="Ver leads por produto" />
+    </AbandonFrame>
+  );
+}
+
+/* ── A4 — Tabela ────────────────────────────────────────────────────── */
+function AV4Table() {
+  return (
+    <AbandonFrame>
+      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-2">
+        <span className="gradient-text text-2xl font-bold">184 pessoas</span>
+        <span className="text-xs text-muted-foreground">{BRL(99698)} · 5 produtos · 2 com fricção</span>
+      </div>
+      <div className="overflow-x-auto rounded-lg border border-border">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
+              <th className="px-3 py-2 font-medium">Produto</th>
+              <th className="px-3 py-2 text-center font-medium">Leads</th>
+              <th className="px-3 py-2 text-center font-medium">Pagas</th>
+              <th className="px-3 py-2 text-center font-medium">Razão</th>
+              <th className="px-3 py-2 text-right font-medium">Valor</th>
+            </tr>
+          </thead>
+          <tbody>
+            {abandonProducts.map((p) => (
+              <tr key={p.productName} className={cn("border-b border-border last:border-0", p.frictionAlert && "bg-red-500/5")}>
+                <td className="px-3 py-2">
+                  <span className="flex items-center gap-1.5 font-medium text-foreground">
+                    {p.frictionAlert && <AlertTriangle className="size-3.5 text-red-400" />}
+                    {p.productName}
+                  </span>
+                </td>
+                <td className="px-3 py-2 text-center tabular-nums text-foreground">{p.leadCount}</td>
+                <td className="px-3 py-2 text-center tabular-nums text-muted-foreground">{p.paidCount}</td>
+                <td className="px-3 py-2 text-center">
+                  <span className={cn("font-mono text-xs", p.frictionAlert ? "text-red-400" : "text-muted-foreground")}>{p.ratio}×</span>
+                </td>
+                <td className="px-3 py-2 text-right tabular-nums text-foreground">{BRL(p.totalAttemptedValue)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <GradientCTA label="Exportar por produto · opt-in" />
+    </AbandonFrame>
+  );
+}
+
+/* ── A5 — Métrica + ranking ─────────────────────────────────────────── */
+function AV5Metric() {
+  const max = Math.max(...abandonProducts.map((p) => p.leadCount));
+  return (
+    <AbandonFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+        Abandono no checkout · 30 dias
+      </p>
+      <div className="mt-2">
+        <span className="gradient-text text-5xl font-bold tracking-tight">{BRL(99698)}</span>
+      </div>
+      <p className="mt-1 text-sm text-muted-foreground">
+        184 pessoas em 5 produtos · <span className="text-red-400">2 com fricção</span>
+      </p>
+      <div className="mt-5 flex flex-col gap-3.5">
+        {abandonProducts.map((p) => (
+          <div key={p.productName}>
+            <div className="mb-1 flex items-center justify-between text-sm">
+              <span className="flex items-center gap-1.5 text-foreground">
+                {p.frictionAlert && <AlertTriangle className="size-3.5 text-red-400" />}
+                {p.productName}
+              </span>
+              <span className="flex items-center gap-2">
+                <RatioChip p={p} />
+                <span className="tabular-nums text-muted-foreground">{p.leadCount}</span>
+              </span>
+            </div>
+            <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+              <div className={cn("h-full rounded-full", p.frictionAlert ? "bg-gradient-to-r from-red-500 to-red-400" : "gradient-brand")} style={{ width: `${(p.leadCount / max) * 100}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <GradientCTA label="Ver detalhamento por produto" />
+    </AbandonFrame>
+  );
+}
+
+function CheckoutAbandonmentResult() {
+  return (
+    <div className="flex flex-col gap-9">
+      <Variation n={1} title="Blocos por produto"><AV1Blocks /></Variation>
+      <Variation n={2} title="Alerta de fricção (hero)"><AV2Friction /></Variation>
+      <Variation n={3} title="Barras abandono × venda"><AV3Bars /></Variation>
+      <Variation n={4} title="Tabela"><AV4Table /></Variation>
+      <Variation n={5} title="Métrica + ranking"><AV5Metric /></Variation>
+    </div>
+  );
+}
+
 /** Registro: id do componente → componente de resultado. */
 export const resultComponents: Record<string, ComponentType> = {
   "card-declined-recovery-list": CardDeclinedRecoveryResult,
   "pending-pix-boleto-by-day": BoletoPendingByDayResult,
+  "checkout-abandonment-by-product": CheckoutAbandonmentResult,
 };
 
 export function getResultComponent(id: string): ComponentType | undefined {
