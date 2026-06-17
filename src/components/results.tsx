@@ -4507,6 +4507,254 @@ function LapsedCustomersResult() {
   );
 }
 
+/* ════════════════════════════════════════════════════════════════════════
+   cooled-leads-by-funnel — esfriou sem comprar, por funil de origem
+   ════════════════════════════════════════════════════════════════════════ */
+
+type StratKey = "email" | "desconto" | "entrada" | "sdr";
+const stratMeta: Record<StratKey, { chip: string; dot: string }> = {
+  email: { chip: "border-zinc-300/30 bg-zinc-300/10 text-zinc-300", dot: "bg-zinc-400" },
+  desconto: { chip: "border-amber-500/30 bg-amber-500/10 text-amber-400", dot: "bg-amber-500" },
+  entrada: { chip: "border-brand/40 bg-brand/10 text-brand", dot: "bg-brand" },
+  sdr: { chip: "border-red-500/30 bg-red-500/10 text-red-400", dot: "bg-red-500" },
+};
+
+interface CooledFunnel {
+  label: string;
+  ticket: string;
+  leadCount: number;
+  avgScore: number;
+  strategy: string;
+  strat: StratKey;
+  sample: string[];
+}
+
+const cooledFunnels: CooledFunnel[] = [
+  { label: "Isca · eBook Grátis", ticket: "grátis", leadCount: 38, avgScore: 42, strategy: "E-mail automático mínimo", strat: "email", sample: ["Lucas M.", "Sofia R.", "Tiago P."] },
+  { label: "Curso de Entrada · R$ 197", ticket: "R$ 197", leadCount: 27, avgScore: 55, strategy: "Reoferta com desconto", strat: "desconto", sample: ["Marina C.", "Pedro A.", "Júlia F."] },
+  { label: "Mentoria High-Ticket", ticket: "R$ 2.997", leadCount: 19, avgScore: 61, strategy: "Oferecer o produto de entrada", strat: "entrada", sample: ["Rafael S.", "Bianca L.", "Otávio N."] },
+  { label: "Imersão Presencial · R$ 5k", ticket: "R$ 5.000", leadCount: 12, avgScore: 68, strategy: "Ligação de SDR", strat: "sdr", sample: ["Helena V.", "Gustavo D.", "Carla M."] },
+];
+
+interface CooledLead {
+  name: string;
+  score: number;
+  funnel: string;
+  idleDays: number;
+}
+const cooledFlat: CooledLead[] = [
+  { name: "Helena Vasconcelos", score: 72, funnel: "Imersão Presencial", idleDays: 24 },
+  { name: "Gustavo Dias", score: 70, funnel: "Imersão Presencial", idleDays: 28 },
+  { name: "Rafael Souza", score: 66, funnel: "Mentoria High-Ticket", idleDays: 22 },
+  { name: "Bianca Lopes", score: 63, funnel: "Mentoria High-Ticket", idleDays: 35 },
+  { name: "Marina Castro", score: 58, funnel: "Curso de Entrada", idleDays: 26 },
+  { name: "Pedro Alves", score: 54, funnel: "Curso de Entrada", idleDays: 40 },
+  { name: "Lucas Martins", score: 45, funnel: "Isca · eBook", idleDays: 23 },
+];
+
+const cooledTotal = cooledFunnels.reduce((s, f) => s + f.leadCount, 0);
+const cooledCandidates = 134;
+const cooledExcludedBuyers = cooledCandidates - cooledTotal;
+const cooledTools = ["esquema_de_filtro_de_leads", "leads_search", "leads_origens_tree", "executar"];
+
+function CooledFrame({ children }: { children: ReactNode }) {
+  return (
+    <ResultFrame orchestration="COOLED_LEADS_BY_FUNNEL" tag="CRM" tools={cooledTools}>
+      {children}
+    </ResultFrame>
+  );
+}
+
+function CooledPremise() {
+  return (
+    <p className="text-xs italic leading-relaxed text-muted-foreground">
+      “Tinham sinal de calor nos últimos 90 dias, pararam há 21+ dias e nunca
+      compraram — agrupados pelo funil de origem.”
+    </p>
+  );
+}
+
+/** Aviso de proxy (temperatura histórica não é filtrável direto). */
+function ProxyNote() {
+  return (
+    <div className="flex items-center gap-2.5 rounded-lg border border-border bg-muted/30 px-3 py-2">
+      <AlertTriangle className="size-3.5 shrink-0 text-muted-foreground" />
+      <p className="text-[11px] leading-relaxed text-muted-foreground">
+        Histórico de temperatura não é filtrável direto — proxy: atividade na janela + parado 21d+ + estado atual não-quente.
+      </p>
+    </div>
+  );
+}
+
+/* ── C1 — Por funil (grupos + estratégia) ───────────────────────────── */
+function CL1Funnels() {
+  return (
+    <CooledFrame>
+      <CooledPremise />
+      <p className="mt-3 text-sm text-foreground">
+        <span className="font-semibold">{cooledTotal} leads esfriaram</span> em {cooledFunnels.length} funis sem comprar
+      </p>
+      <p className="mt-0.5 text-xs text-muted-foreground">{cooledCandidates} candidatos · {cooledExcludedBuyers} já tinham comprado (excluídos)</p>
+      <div className="mt-3"><ProxyNote /></div>
+      <div className="mt-4 flex flex-col gap-2.5">
+        {cooledFunnels.map((f) => (
+          <div key={f.label} className="rounded-xl border border-border bg-card/40 p-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <div className="truncate text-sm font-medium text-foreground">{f.label}</div>
+                <div className="text-[11px] text-muted-foreground">{f.leadCount} leads · score médio {f.avgScore}</div>
+              </div>
+              <span className="shrink-0 text-lg font-bold tabular-nums text-foreground">{f.leadCount}</span>
+            </div>
+            <div className="mt-2.5 flex items-center gap-2">
+              <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium", stratMeta[f.strat].chip)}>
+                <span className={cn("size-1.5 rounded-full", stratMeta[f.strat].dot)} />{f.strategy}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+      <GradientCTA label="1 sequência por funil · opt-in" />
+    </CooledFrame>
+  );
+}
+
+/* ── C2 — Cards (funil + amostra) ───────────────────────────────────── */
+function CL2Cards() {
+  return (
+    <CooledFrame>
+      <div className="flex flex-wrap items-baseline gap-2">
+        <span className="gradient-text text-2xl font-bold">{cooledTotal}</span>
+        <span className="text-sm text-foreground">resfriados em {cooledFunnels.length} funis</span>
+      </div>
+      <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
+        {cooledFunnels.map((f) => (
+          <div key={f.label} className="rounded-xl border border-border bg-card/40 p-3">
+            <div className="flex items-center justify-between gap-2">
+              <span className="truncate text-sm font-medium text-foreground">{f.label}</span>
+              <span className="shrink-0 rounded-md border border-border px-1.5 py-0.5 text-xs font-semibold tabular-nums text-foreground">{f.leadCount}</span>
+            </div>
+            <div className="mt-2">
+              <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-medium", stratMeta[f.strat].chip)}>
+                <span className={cn("size-1.5 rounded-full", stratMeta[f.strat].dot)} />{f.strategy}
+              </span>
+            </div>
+            <div className="mt-2.5 flex flex-wrap gap-1">
+              {f.sample.map((n) => (
+                <span key={n} className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">{n}</span>
+              ))}
+              {f.leadCount > f.sample.length && <span className="px-1 text-[10px] text-brand">+{f.leadCount - f.sample.length}</span>}
+            </div>
+          </div>
+        ))}
+      </div>
+      <GradientCTA label="Campanha por funil · opt-in" />
+    </CooledFrame>
+  );
+}
+
+/* ── C3 — Distribuição por funil ────────────────────────────────────── */
+function CL3Dist() {
+  const max = Math.max(...cooledFunnels.map((f) => f.leadCount));
+  return (
+    <CooledFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Leads resfriados por funil de origem</p>
+      <div className="mt-2 flex items-end gap-2">
+        <span className="gradient-text text-4xl font-bold tracking-tight">{cooledTotal}</span>
+        <span className="mb-1 text-sm text-muted-foreground">esfriaram sem comprar · {cooledExcludedBuyers} compradores fora</span>
+      </div>
+      <div className="mt-5 flex flex-col gap-4">
+        {cooledFunnels.map((f) => (
+          <div key={f.label}>
+            <div className="mb-1 flex items-center justify-between gap-2 text-sm">
+              <span className="flex items-center gap-2"><span className={cn("size-2 rounded-full", stratMeta[f.strat].dot)} /><span className="truncate text-foreground">{f.label}</span></span>
+              <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{f.leadCount} · score {f.avgScore}</span>
+            </div>
+            <div className="h-3 overflow-hidden rounded-full bg-muted">
+              <div className={cn("h-full rounded-full", stratMeta[f.strat].dot)} style={{ width: `${(f.leadCount / max) * 100}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-3"><ProxyNote /></div>
+      <GradientCTA label="Abrir por funil · opt-in" />
+    </CooledFrame>
+  );
+}
+
+/* ── C4 — Tabela (leads mais quentes) ───────────────────────────────── */
+function CL4Table() {
+  return (
+    <CooledFrame>
+      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-2">
+        <span className="gradient-text text-2xl font-bold">{cooledTotal} resfriados</span>
+        <span className="text-xs text-muted-foreground">top por score · {cooledFunnels.length} funis</span>
+      </div>
+      <div className="overflow-x-auto rounded-lg border border-border">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
+              <th className="px-3 py-2 font-medium">Lead</th>
+              <th className="px-3 py-2 text-center font-medium">Score</th>
+              <th className="px-3 py-2 font-medium">Funil</th>
+              <th className="px-3 py-2 text-right font-medium">Parado</th>
+            </tr>
+          </thead>
+          <tbody>
+            {cooledFlat.map((l) => (
+              <tr key={l.name} className="border-b border-border last:border-0 hover:bg-accent/40">
+                <td className="px-3 py-2 font-medium text-foreground">{l.name}</td>
+                <td className="px-3 py-2 text-center"><span className="rounded-md border border-border px-1.5 py-0.5 text-xs font-semibold tabular-nums text-foreground">{l.score}</span></td>
+                <td className="px-3 py-2 text-xs text-muted-foreground">{l.funnel}</td>
+                <td className="px-3 py-2 text-right text-xs tabular-nums text-muted-foreground">há {l.idleDays}d</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <button type="button" className="mt-1 px-2 text-xs font-medium text-brand hover:underline">+ {cooledTotal - cooledFlat.length} resfriados</button>
+      <GradientCTA label="Exportar lista de reativação · opt-in" />
+    </CooledFrame>
+  );
+}
+
+/* ── C5 — Mapa de estratégia ────────────────────────────────────────── */
+function CL5Strategy() {
+  return (
+    <CooledFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Estratégia de reativação por funil</p>
+      <p className="mt-1 text-xs text-muted-foreground">Cada funil pede um ângulo diferente — derivado do ticket de entrada</p>
+      <div className="mt-4 flex flex-col gap-2.5">
+        {cooledFunnels.map((f) => (
+          <div key={f.label} className="rounded-xl border border-border bg-card/40 p-3">
+            <div className="flex items-center gap-3">
+              <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-lg border text-xs font-bold tabular-nums", stratMeta[f.strat].chip)}>{f.leadCount}</span>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-semibold text-foreground">{f.strategy}</div>
+                <div className="truncate text-[11px] text-muted-foreground">{f.label} · ticket {f.ticket}</div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="mt-4 text-xs leading-relaxed text-muted-foreground">Estratégia é recomendação derivada do ticket — não dado do sistema.</p>
+      <GradientCTA label="Montar as campanhas por funil · opt-in" />
+    </CooledFrame>
+  );
+}
+
+function CooledLeadsResult() {
+  return (
+    <div className="flex flex-col gap-9">
+      <Variation n={1} title="Por funil + estratégia"><CL1Funnels /></Variation>
+      <Variation n={2} title="Cards por funil"><CL2Cards /></Variation>
+      <Variation n={3} title="Distribuição por funil"><CL3Dist /></Variation>
+      <Variation n={4} title="Tabela (mais quentes)"><CL4Table /></Variation>
+      <Variation n={5} title="Mapa de estratégia"><CL5Strategy /></Variation>
+    </div>
+  );
+}
+
 /** Registro: id do componente → componente de resultado. */
 export const resultComponents: Record<string, ComponentType> = {
   "card-declined-recovery-list": CardDeclinedRecoveryResult,
@@ -4526,6 +4774,7 @@ export const resultComponents: Record<string, ComponentType> = {
   "proposals-sent-no-follow-up": ProposalsResult,
   "gold-leads-high-ticket-agenda": GoldLeadsResult,
   "lapsed-customers-still-opening": LapsedCustomersResult,
+  "cooled-leads-by-funnel": CooledLeadsResult,
 };
 
 export function getResultComponent(id: string): ComponentType | undefined {

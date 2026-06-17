@@ -19,6 +19,7 @@ import leadsQuentesSemContato from "@/content/playbooks/analise/leads-quentes-se
 import propostasEnviadasSemAcompanhamento from "@/content/playbooks/analise/propostas-enviadas-sem-acompanhamento.md?raw";
 import ouroLideraAgenda from "@/content/playbooks/analise/ouro-lidera-agenda-de-alto-valor.md?raw";
 import clientesInativosAbrem from "@/content/playbooks/analise/clientes-inativos-ainda-abrem-emails.md?raw";
+import resfriadosPorFunil from "@/content/playbooks/analise/resfriados-por-funil.md?raw";
 
 export interface Playbook {
   /** Rótulo do grupo (ex: "Resgate · recuperação de vendas") */
@@ -622,6 +623,42 @@ export const playbooks: Record<string, Playbook> = {
     ],
     body: clientesInativosAbrem,
     resultId: "lapsed-customers-still-opening",
+  },
+  "/analise/reativacao/resfriados-por-funil": {
+    group: "Reativação",
+    groupEmoji: "🔄",
+    agent: "Diego + Vinícius",
+    title: "resfriados por funil",
+    summary:
+      "Utilize quando o usuário solicitar leads que estavam promissores, mas esfriaram sem comprar, agrupados por funil de origem.",
+    gatilhos: [
+      "leads quentes que esfriaram",
+      "estava quente e esfriou",
+      "leads frios sem comprar",
+      "agrupa pelo funil",
+      "cabos resfriados",
+      "Pistas promissoras que esfriaram",
+      "reativar leads que esfriaram",
+    ],
+    perguntas: [
+      "Quais leads estavam quentes e esfriaram sem comprar? Agrupa por funil.",
+      "Resfriados por funil de origem — qual funil concentra mais leads parados?",
+      "Quero reativar quem esfriou: separa por funil pra eu dar a oferta certa.",
+      "Leads promissores que pararam de interagir há 3+ semanas, por origem.",
+      "Quais os leads mais quentes que esfriaram em cada funil?",
+    ],
+    ferramentas: [
+      "esquema_de_filtro_de_leads",
+      "leads_search",
+      "leads_origens",
+      "leads_origens_tree",
+      "métricas_de_atividades_por_lead",
+      "painel_minhas_vendas",
+      "pergunta",
+      "executar",
+    ],
+    body: resfriadosPorFunil,
+    resultId: "cooled-leads-by-funnel",
   },
 };
 
