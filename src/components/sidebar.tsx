@@ -46,8 +46,17 @@ export function Sidebar({ onNavigate }: SidebarProps) {
       </nav>
 
       {/* Rodapé */}
-      <div className="border-t border-sidebar-border px-5 py-3 text-xs text-muted-foreground">
-        v0.1.0 · Documentação Max
+      <div className="flex items-center justify-between border-t border-sidebar-border px-5 py-3 text-xs text-muted-foreground">
+        <span>v0.1.0</span>
+        <NavLink
+          to="/insight"
+          onClick={onNavigate}
+          className={({ isActive }) =>
+            cn("transition-colors hover:text-brand", isActive && "text-brand")
+          }
+        >
+          Sistema de Insight ↗
+        </NavLink>
       </div>
     </div>
   );

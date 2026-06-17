@@ -64,31 +64,31 @@ function ResultFrame({
 }) {
   return (
     <div>
-      <div className="dot-frame rounded-2xl p-4 sm:p-6">
-        <div className="overflow-hidden rounded-xl border border-border bg-background/90 shadow-xl shadow-black/20">
-          <div className="flex items-center justify-between border-b border-border px-5 py-3">
-            <div className="flex items-center gap-2 font-mono text-xs">
+      <div className="dot-frame p-4 sm:p-6">
+        <div className="result-surface">
+          <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3.5">
+            <div className="flex items-center gap-2 font-mono text-[11px]">
               <span className="relative flex size-2">
-                <span className="absolute inline-flex size-full animate-ping rounded-full bg-brand opacity-60" />
+                <span className="absolute inline-flex size-full animate-ping rounded-full bg-brand opacity-50" />
                 <span className="relative inline-flex size-2 rounded-full bg-brand" />
               </span>
-              <span className="font-semibold text-foreground">CLICKMAX</span>
-              <span className="text-muted-foreground">· {orchestration}</span>
+              <span className="font-semibold tracking-wide text-foreground">CLICKMAX</span>
+              <span className="text-muted-foreground/80">· {orchestration}</span>
             </div>
-            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            <span className="shrink-0 rounded-full border border-border bg-muted/40 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
               {tag}
             </span>
           </div>
-          <div className="p-5">{children}</div>
+          <div className="p-5 sm:p-6">{children}</div>
         </div>
       </div>
       {tools.length > 0 && (
-        <div className="mt-3 flex flex-wrap items-center gap-1.5 px-1">
-          <span className="text-xs text-muted-foreground">tools:</span>
+        <div className="mt-3 flex flex-wrap items-center gap-1.5 px-1.5">
+          <span className="text-[11px] text-muted-foreground/70">tools</span>
           {tools.map((t) => (
             <span
               key={t}
-              className="rounded-md border border-border bg-muted/60 px-2 py-0.5 font-mono text-xs text-muted-foreground"
+              className="rounded-md border border-border bg-muted/40 px-2 py-0.5 font-mono text-[11px] text-muted-foreground transition-colors hover:text-foreground"
             >
               {t}
             </span>
@@ -112,10 +112,10 @@ function GradientCTA({ label }: { label: string }) {
   return (
     <button
       type="button"
-      className="gradient-brand mt-5 flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold text-black/85 transition-opacity hover:opacity-90"
+      className="gradient-brand group/cta mt-6 flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-black/85 shadow-[0_6px_24px_-8px] shadow-lime-400/40 ring-1 ring-inset ring-white/20 transition-all duration-200 hover:shadow-lime-400/60 hover:brightness-[1.04] active:scale-[0.99]"
     >
       {label}
-      <ArrowRight className="size-4" />
+      <ArrowRight className="size-4 transition-transform duration-200 group-hover/cta:translate-x-0.5" />
     </button>
   );
 }
@@ -333,11 +333,12 @@ function Variation({
 }) {
   return (
     <div>
-      <div className="mb-2.5 flex items-center gap-2 text-sm">
-        <span className="rounded-md bg-muted px-2 py-0.5 font-mono text-xs text-muted-foreground">
-          Variação {n}
+      <div className="mb-3 flex items-center gap-2.5">
+        <span className="flex size-5 items-center justify-center rounded-md border border-border bg-muted/50 font-mono text-[11px] tabular-nums text-muted-foreground">
+          {n}
         </span>
-        <span className="font-medium text-foreground">{title}</span>
+        <span className="text-sm font-medium tracking-tight text-foreground">{title}</span>
+        <span className="h-px flex-1 bg-gradient-to-r from-border to-transparent" />
       </div>
       {children}
     </div>
