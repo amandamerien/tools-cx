@@ -24,6 +24,7 @@ import decisaoEscalaCampanha from "@/content/playbooks/analise/decisao-de-escala
 import candidatosUpsellCruzado from "@/content/playbooks/analise/candidatos-a-upsell-de-produtos-cruzados.md?raw";
 import resumoSemanalDinheiroOculto from "@/content/playbooks/analise/resumo-semanal-do-dinheiro-oculto.md?raw";
 import descobertaPadroesCampos from "@/content/playbooks/analise/descoberta-de-padroes-de-campos-personalizados.md?raw";
+import monitorCaixaEntrada from "@/content/playbooks/analise/monitor-de-caixa-de-entrada-de-servico-em-risco.md?raw";
 
 export interface Playbook {
   /** Rótulo do grupo (ex: "Resgate · recuperação de vendas") */
@@ -801,6 +802,44 @@ export const playbooks: Record<string, Playbook> = {
     ],
     body: descobertaPadroesCampos,
     resultId: "custom-field-pattern-discovery",
+  },
+  "/analise/novos-proatividade-e-atendimento/monitor-de-caixa-de-entrada-de-servico-em-risco": {
+    group: "Novos · proatividade e atendimento",
+    groupEmoji: "✨",
+    agent: "Diego + Vinícius",
+    title: "monitor de caixa de entrada de serviço em risco",
+    summary:
+      "Utilize quando o usuário perguntar quais oportunidades de serviço precisam ser contatadas primeiro, classificadas pelo valor do cartão multiplicado pelo tempo ocioso, normalizado pelo SLA de cada pipeline.",
+    gatilhos: [
+      "quem está esperando atendimento",
+      "oportunidades paradas",
+      "demora no atendimento",
+      "quem atender primeiro",
+      "SLA estourado",
+      "oportunidades em risco",
+      "negócios paralisados",
+      "fila de atendimento",
+    ],
+    perguntas: [
+      "Quem atender primeiro? Me dá a fila por valor × atraso.",
+      "Quais oportunidades estouraram o SLA do pipeline?",
+      "Tem negócio caro parado esperando atendimento?",
+      "Fila de atendimento por atendente — quem tá com mais card estourado?",
+      "Quais cards estão parados além do SLA e quanto valem?",
+    ],
+    ferramentas: [
+      "lista_de_pipelines",
+      "pipelines_settings_get",
+      "cartões_em_risco",
+      "lista_de_cartões",
+      "lista_de_atividades_por_lead",
+      "cartões_atribuir_atendentes",
+      "cartas_movimento",
+      "pergunta",
+      "executar",
+    ],
+    body: monitorCaixaEntrada,
+    resultId: "service-inbox-at-risk-monitor",
   },
 };
 

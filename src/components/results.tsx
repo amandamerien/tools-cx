@@ -5835,6 +5835,283 @@ function FieldPatternResult() {
   );
 }
 
+/* ════════════════════════════════════════════════════════════════════════
+   service-inbox-at-risk-monitor — fila de atendimento por valor × atraso ÷ SLA
+   ════════════════════════════════════════════════════════════════════════ */
+
+interface QueueCard {
+  title: string;
+  pipeline: string;
+  stage: string;
+  attendant: string;
+  valueCents: number;
+  idle: number;
+  sla: number;
+  daysSinceContact: number | null;
+}
+
+const queueCards: QueueCard[] = [
+  { title: "Distribuidora Alfa", pipeline: "Comercial Outbound", stage: "Proposta", attendant: "Peçanha", valueCents: 4997000, idle: 12, sla: 3, daysSinceContact: 12 },
+  { title: "Construtora Beta", pipeline: "Comercial Outbound", stage: "Negociação", attendant: "Lara", valueCents: 3850000, idle: 9, sla: 3, daysSinceContact: 14 },
+  { title: "Clínica Vida", pipeline: "Inbound", stage: "Qualificação", attendant: "Vinícius", valueCents: 2990000, idle: 21, sla: 7, daysSinceContact: 28 },
+  { title: "Loja Norte", pipeline: "Comercial Outbound", stage: "Proposta", attendant: "Peçanha", valueCents: 1290000, idle: 18, sla: 3, daysSinceContact: null },
+  { title: "Studio Foto", pipeline: "Renovação", stage: "Follow-up", attendant: "Lara", valueCents: 1850000, idle: 15, sla: 5, daysSinceContact: null },
+  { title: "Restaurante Sabor", pipeline: "Inbound", stage: "Qualificação", attendant: "Lara", valueCents: 540000, idle: 8, sla: 7, daysSinceContact: null },
+  { title: "Academia Forte", pipeline: "Renovação", stage: "Follow-up", attendant: "Vinícius", valueCents: 0, idle: 25, sla: 5, daysSinceContact: null },
+];
+
+const slaRatio = (c: QueueCard) => c.idle / c.sla;
+const priorityScore = (c: QueueCard) => Math.max(c.valueCents, 1) * slaRatio(c);
+const queueRanked = [...queueCards].sort((a, b) => priorityScore(b) - priorityScore(a));
+const queueAtRiskTotal = 38;
+const queueSlaByPipeline = [
+  { pipeline: "Comercial Outbound", sla: 3 },
+  { pipeline: "Inbound", sla: 7 },
+  { pipeline: "Renovação", sla: 5 },
+];
+const queueTools = ["lista_de_pipelines", "cartoes_em_risco", "lista_de_cartoes", "executar"];
+
+/** Razão de estouro do SLA → severidade. */
+function ratioTone(r: number) {
+  if (r >= 4) return { chip: "border-red-500/30 bg-red-500/10 text-red-400", dot: "bg-red-500" };
+  if (r >= 2) return { chip: "border-amber-500/30 bg-amber-500/10 text-amber-400", dot: "bg-amber-500" };
+  return { chip: "border-border bg-muted/60 text-muted-foreground", dot: "bg-zinc-500" };
+}
+const fmtRatio = (r: number) => `${Math.round(r * 10) / 10}× estourado`;
+
+/** Resumo por atendente (fila, não culpados). */
+const queueByAttendant = (() => {
+  const m = new Map<string, { count: number; valueCents: number }>();
+  for (const c of queueCards) {
+    const cur = m.get(c.attendant) || { count: 0, valueCents: 0 };
+    cur.count += 1;
+    cur.valueCents += c.valueCents;
+    m.set(c.attendant, cur);
+  }
+  return [...m.entries()].map(([name, v]) => ({ name, ...v })).sort((a, b) => b.count - a.count);
+})();
+
+function QueueFrame({ children }: { children: ReactNode }) {
+  return (
+    <ResultFrame orchestration="SERVICE_INBOX_AT_RISK_MONITOR" tag="CRM" tools={queueTools}>
+      {children}
+    </ResultFrame>
+  );
+}
+
+function QueuePremise() {
+  return (
+    <p className="text-xs italic leading-relaxed text-muted-foreground">
+      “Fila de atendimento priorizada por valor do card × dias parado, normalizado
+      pelo SLA de cada pipeline. Quem atender primeiro.”
+    </p>
+  );
+}
+
+/** SLAs por pipeline (citado uma vez). */
+function SlaLine() {
+  return (
+    <p className="mt-1 text-xs text-muted-foreground">
+      SLA por pipeline: {queueSlaByPipeline.map((s) => `${s.pipeline} ${s.sla}d`).join(" · ")}
+    </p>
+  );
+}
+
+/** Nota de divergência: card mexido sem contato real. */
+function contactNote(c: QueueCard) {
+  if (c.daysSinceContact == null) return null;
+  if (c.daysSinceContact > c.idle) return { text: `mexido sem contato há ${c.daysSinceContact}d`, tone: "text-red-400" };
+  return { text: `último contato há ${c.daysSinceContact}d`, tone: "text-muted-foreground" };
+}
+
+/* ── Q1 — Fila priorizada ───────────────────────────────────────────── */
+function IM1Queue() {
+  return (
+    <QueueFrame>
+      <QueuePremise />
+      <p className="mt-3 text-sm text-foreground"><span className="font-semibold">{queueAtRiskTotal} cards parados</span> além do SLA · fila por valor × atraso</p>
+      <SlaLine />
+      <ul className="mt-4 flex flex-col gap-px">
+        {queueRanked.map((c) => {
+          const t = ratioTone(slaRatio(c));
+          const note = contactNote(c);
+          return (
+            <li key={c.title} className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-accent/50">
+              <span className={cn("size-2 shrink-0 rounded-full", t.dot)} />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="truncate text-sm font-medium text-foreground">{c.title}</span>
+                  {c.valueCents === 0 && <span className="shrink-0 rounded-full border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-400">sem valor</span>}
+                </div>
+                <div className="truncate text-xs text-muted-foreground">{c.pipeline} · {c.stage} · {c.attendant}{note ? ` · ` : ""}{note && <span className={note.tone}>{note.text}</span>}</div>
+              </div>
+              <span className={cn("shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-medium tabular-nums", t.chip)}>{c.idle}d / SLA {c.sla}d</span>
+              <span className="w-24 shrink-0 text-right text-sm font-semibold tabular-nums text-foreground">{c.valueCents ? BRL(c.valueCents / 100) : "—"}</span>
+            </li>
+          );
+        })}
+      </ul>
+      <button type="button" className="mt-1 px-2 text-xs font-medium text-brand hover:underline">+ {queueAtRiskTotal - queueRanked.length} cards na fila</button>
+      <GradientCTA label="Reatribuir os críticos · opt-in" />
+    </QueueFrame>
+  );
+}
+
+/* ── Q2 — Cards ─────────────────────────────────────────────────────── */
+function IM2Cards() {
+  return (
+    <QueueFrame>
+      <div className="flex flex-wrap items-baseline gap-2">
+        <span className="gradient-text text-2xl font-bold">{queueAtRiskTotal} parados</span>
+        <span className="text-xs text-muted-foreground">além do SLA · {queueByAttendant.length} atendentes</span>
+      </div>
+      <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
+        {queueRanked.map((c) => {
+          const t = ratioTone(slaRatio(c));
+          return (
+            <div key={c.title} className={cn("rounded-xl border bg-card/40 p-3", slaRatio(c) >= 4 ? "border-red-500/30" : "border-border")}>
+              <div className="flex items-center justify-between gap-2">
+                <span className="min-w-0 truncate text-sm font-medium text-foreground">{c.title}</span>
+                <span className={cn("shrink-0 rounded-full border px-1.5 py-0.5 text-[10px] font-medium tabular-nums", t.chip)}>{fmtRatio(slaRatio(c))}</span>
+              </div>
+              <div className="mt-1 truncate text-[11px] text-muted-foreground">{c.pipeline} · {c.stage}</div>
+              <div className="mt-2.5 flex items-center justify-between">
+                <span className="text-sm font-semibold tabular-nums text-foreground">{c.valueCents ? BRL(c.valueCents / 100) : "sem valor"}</span>
+                <span className="text-[11px] text-muted-foreground">{c.attendant}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <GradientCTA label="Distribuir a fila por atendente · opt-in" />
+    </QueueFrame>
+  );
+}
+
+/* ── Q3 — Resumo por atendente ──────────────────────────────────────── */
+function IM3ByAttendant() {
+  const maxCount = Math.max(...queueByAttendant.map((a) => a.count));
+  return (
+    <QueueFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Fila por atendente</p>
+      <p className="mt-1 mb-4 text-xs text-muted-foreground">Onde está a carga de cards parados — fila, não ranking de culpados</p>
+      <div className="flex flex-col gap-3.5">
+        {queueByAttendant.map((a) => (
+          <div key={a.name}>
+            <div className="mb-1 flex items-center justify-between gap-2 text-sm">
+              <span className="flex items-center gap-2"><span className="flex size-6 items-center justify-center rounded-full bg-muted text-[10px] font-medium text-muted-foreground">{initials(a.name)}</span><span className="text-foreground">{a.name}</span></span>
+              <span className="text-xs tabular-nums text-muted-foreground">{a.count} cards · {BRL(a.valueCents / 100)}</span>
+            </div>
+            <div className="h-2.5 overflow-hidden rounded-full bg-muted">
+              <div className="h-full rounded-full gradient-brand" style={{ width: `${(a.count / maxCount) * 100}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <GradientCTA label="Rebalancear a fila entre atendentes · opt-in" />
+    </QueueFrame>
+  );
+}
+
+/* ── Q4 — Tabela ────────────────────────────────────────────────────── */
+function IM4Table() {
+  return (
+    <QueueFrame>
+      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-2">
+        <span className="gradient-text text-2xl font-bold">{queueAtRiskTotal} na fila</span>
+        <span className="text-xs text-muted-foreground">por valor × atraso ÷ SLA</span>
+      </div>
+      <div className="overflow-x-auto rounded-lg border border-border">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
+              <th className="px-3 py-2 font-medium">Card</th>
+              <th className="px-3 py-2 font-medium">Parado vs SLA</th>
+              <th className="px-3 py-2 font-medium">Atendente</th>
+              <th className="px-3 py-2 text-right font-medium">Valor</th>
+            </tr>
+          </thead>
+          <tbody>
+            {queueRanked.map((c) => {
+              const t = ratioTone(slaRatio(c));
+              return (
+                <tr key={c.title} className={cn("border-b border-border last:border-0 hover:bg-accent/40", slaRatio(c) >= 4 && "bg-red-500/[0.04]")}>
+                  <td className="px-3 py-2">
+                    <div className="font-medium text-foreground">{c.title}</div>
+                    <div className="text-xs text-muted-foreground">{c.pipeline} · {c.stage}</div>
+                  </td>
+                  <td className="px-3 py-2">
+                    <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium tabular-nums", t.chip)}>
+                      <span className={cn("size-1.5 rounded-full", t.dot)} />{c.idle}d / {c.sla}d
+                    </span>
+                  </td>
+                  <td className="px-3 py-2 text-xs text-muted-foreground">{c.attendant}</td>
+                  <td className="px-3 py-2 text-right tabular-nums text-foreground">{c.valueCents ? BRL(c.valueCents / 100) : <span className="text-amber-400">sem valor</span>}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <GradientCTA label="Exportar fila de atendimento · opt-in" />
+    </QueueFrame>
+  );
+}
+
+/* ── Q5 — Crítico (hero) ────────────────────────────────────────────── */
+function IM5Hero() {
+  const c = queueRanked[0];
+  const t = ratioTone(slaRatio(c));
+  return (
+    <QueueFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Atender primeiro</p>
+      <div className="mt-3 rounded-2xl border border-red-500/30 bg-gradient-to-br from-red-500/[0.08] to-transparent p-4">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-lg font-semibold text-foreground">{c.title}</span>
+          <span className={cn("shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-medium tabular-nums", t.chip)}>{fmtRatio(slaRatio(c))}</span>
+        </div>
+        <div className="mt-1 text-xs text-muted-foreground">{c.pipeline} · {c.stage} · com {c.attendant}</div>
+        <div className="mt-3 grid grid-cols-3 gap-3">
+          <div>
+            <div className="gradient-text text-2xl font-bold tabular-nums">{BRL(c.valueCents / 100)}</div>
+            <div className="text-[10px] text-muted-foreground">valor parado</div>
+          </div>
+          <div>
+            <div className="text-2xl font-bold tabular-nums text-red-400">{c.idle}d</div>
+            <div className="text-[10px] text-muted-foreground">parado · SLA {c.sla}d</div>
+          </div>
+          <div>
+            <div className="text-2xl font-bold tabular-nums text-foreground">{c.daysSinceContact ?? "—"}{c.daysSinceContact != null ? "d" : ""}</div>
+            <div className="text-[10px] text-muted-foreground">sem contato real</div>
+          </div>
+        </div>
+      </div>
+      <div className="mt-4 grid grid-cols-3 gap-3">
+        {queueRanked.slice(1, 4).map((q) => (
+          <div key={q.title} className="rounded-xl border border-border bg-card/40 p-3">
+            <div className="truncate text-xs font-medium text-foreground">{q.title}</div>
+            <div className="mt-1 text-sm font-bold tabular-nums text-foreground">{q.valueCents ? BRL(q.valueCents / 100) : "—"}</div>
+            <div className="text-[10px] text-muted-foreground">{fmtRatio(slaRatio(q))}</div>
+          </div>
+        ))}
+      </div>
+      <GradientCTA label="Avisar o atendente agora · opt-in" />
+    </QueueFrame>
+  );
+}
+
+function ServiceInboxResult() {
+  return (
+    <div className="flex flex-col gap-9">
+      <Variation n={1} title="Fila priorizada"><IM1Queue /></Variation>
+      <Variation n={2} title="Cards por oportunidade"><IM2Cards /></Variation>
+      <Variation n={3} title="Resumo por atendente"><IM3ByAttendant /></Variation>
+      <Variation n={4} title="Tabela"><IM4Table /></Variation>
+      <Variation n={5} title="Atender primeiro (hero)"><IM5Hero /></Variation>
+    </div>
+  );
+}
+
 /** Registro: id do componente → componente de resultado. */
 export const resultComponents: Record<string, ComponentType> = {
   "card-declined-recovery-list": CardDeclinedRecoveryResult,
@@ -5859,6 +6136,7 @@ export const resultComponents: Record<string, ComponentType> = {
   "cross-product-upsell-candidates": CrossUpsellResult,
   "weekly-stalled-money-summary": WeeklySummaryResult,
   "custom-field-pattern-discovery": FieldPatternResult,
+  "service-inbox-at-risk-monitor": ServiceInboxResult,
 };
 
 export function getResultComponent(id: string): ComponentType | undefined {

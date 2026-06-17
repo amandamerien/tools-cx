@@ -164,7 +164,7 @@ export const navigation: NavSection[] = [
         count: 2,
         children: [
           { title: "descoberta de padrões de campos personalizados" },
-          { title: "monitor de caixa de entrada" },
+          { title: "monitor de caixa de entrada de serviço em risco" },
         ],
       },
     ],
