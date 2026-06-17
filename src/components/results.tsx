@@ -3223,6 +3223,261 @@ function ExpiringTrialResult() {
   );
 }
 
+/* ════════════════════════════════════════════════════════════════════════
+   missed-meeting-not-rescheduled — reunião furou e ninguém remarcou
+   ════════════════════════════════════════════════════════════════════════ */
+
+interface MissedLead {
+  name: string;
+  email: string;
+  origin: string;
+  days: number;
+  cardCents: number;
+  missedCount: number;
+}
+
+const missedLeads: MissedLead[] = [
+  { name: "Ricardo Alves", email: "ricardo.alves@gmail.com", origin: "Google Ads", days: 5, cardCents: 1990000, missedCount: 1 },
+  { name: "Paulo Henrique", email: "paulo.h@outlook.com", origin: "Facebook Ads · LR-14", days: 9, cardCents: 1397000, missedCount: 1 },
+  { name: "Tatiane Melo", email: "tati.melo@gmail.com", origin: "Facebook Ads · LR-14", days: 12, cardCents: 1290000, missedCount: 1 },
+  { name: "Aline Santos", email: "aline.santos@hotmail.com", origin: "Facebook Ads · LR-14", days: 15, cardCents: 880000, missedCount: 1 },
+  { name: "João Ribeiro", email: "joao.ribeiro@gmail.com", origin: "Facebook Ads · LR-14", days: 19, cardCents: 999700, missedCount: 1 },
+  { name: "Sandra Costa", email: "sandra.c@gmail.com", origin: "Facebook Ads · LR-14", days: 21, cardCents: 750000, missedCount: 2 },
+  { name: "Eduardo Pinto", email: "edu.pinto@gmail.com", origin: "Instagram · Stories", days: 8, cardCents: 497000, missedCount: 1 },
+  { name: "Vanessa Dias", email: "vanessa.dias@gmail.com", origin: "Indicação", days: 27, cardCents: 490000, missedCount: 1 },
+];
+
+const missedTotalCents = missedLeads.reduce((s, l) => s + l.cardCents, 0);
+const missedStats = { missed: 11, rescheduled: 2, assumed: 1 };
+const missedToolsList = ["lista_de_atividades_do_sistema", "lista_de_cartoes_por_lead", "executar"];
+
+/** Padrão por origem: conta perdas por anúncio e detecta a origem dominante. */
+const missedOriginPattern = (() => {
+  const m = new Map<string, number>();
+  for (const l of missedLeads) m.set(l.origin, (m.get(l.origin) || 0) + 1);
+  return [...m.entries()]
+    .map(([origin, count]) => ({ origin, count, share: count / missedLeads.length }))
+    .sort((a, b) => b.count - a.count);
+})();
+const missedDominant =
+  missedOriginPattern[0] && missedOriginPattern[0].count >= 3 && missedOriginPattern[0].share >= 0.5
+    ? missedOriginPattern[0]
+    : null;
+
+function MissedFrame({ children }: { children: ReactNode }) {
+  return (
+    <ResultFrame orchestration="MISSED_MEETING_NOT_RESCHEDULED" tag="Comercial" tools={missedToolsList}>
+      {children}
+    </ResultFrame>
+  );
+}
+
+function MissedPremise() {
+  return (
+    <p className="text-xs italic leading-relaxed text-muted-foreground">
+      “Reuniões marcadas nos últimos 30 dias, sem reagendamento posterior nem
+      follow-up em ±24h — inferido por ausência de eventos.”
+    </p>
+  );
+}
+
+/** Box do padrão de anúncio dominante (hipótese a auditar, não veredito). */
+function DominantOriginNote({ compact = false }: { compact?: boolean }) {
+  if (!missedDominant) return null;
+  return (
+    <div className={cn("flex items-center gap-3 rounded-xl border border-amber-500/30 bg-amber-500/[0.06]", compact ? "p-2.5" : "p-3")}>
+      <AlertTriangle className="size-4 shrink-0 text-amber-400" />
+      <p className="text-xs leading-relaxed text-foreground">
+        <span className="font-semibold text-amber-400">{missedDominant.count} das {missedLeads.length}</span> reuniões perdidas vieram de <span className="font-medium">{missedDominant.origin}</span> — pode ser promessa do anúncio desalinhada. Vale auditar antes de remarcar todo mundo.
+      </p>
+    </div>
+  );
+}
+
+/* ── M1 — Lista por reunião mais recente ────────────────────────────── */
+function MM1List() {
+  const sorted = [...missedLeads].sort((a, b) => a.days - b.days);
+  return (
+    <MissedFrame>
+      <MissedPremise />
+      <div className="mt-3 flex flex-wrap items-end gap-x-2 gap-y-1">
+        <span className="gradient-text text-4xl font-bold tracking-tight">{BRL(missedTotalCents / 100)}</span>
+        <span className="mb-1 text-base font-medium text-foreground">parados em proposta</span>
+      </div>
+      <p className="mt-1 text-xs text-muted-foreground">{missedLeads.length} reuniões perdidas sem remarcação · {missedStats.rescheduled} remarcadas e {missedStats.assumed} provável-aconteceu já excluídas</p>
+      <div className="mt-4 mb-4"><DominantOriginNote /></div>
+      <ul className="flex flex-col gap-px">
+        {sorted.map((l) => (
+          <li key={l.email} className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-accent/50">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">{initials(l.name)}</span>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5">
+                <span className="truncate text-sm font-medium text-foreground">{l.name}</span>
+                {l.missedCount > 1 && <span className="shrink-0 rounded-full border border-red-500/30 bg-red-500/10 px-1.5 py-0.5 text-[10px] font-medium text-red-400">{l.missedCount}× furou</span>}
+              </div>
+              <div className="truncate text-xs text-muted-foreground">{l.origin} · faltou há {l.days}d</div>
+            </div>
+            <span className="shrink-0 text-sm font-medium tabular-nums text-foreground">{BRL(l.cardCents / 100)}</span>
+          </li>
+        ))}
+      </ul>
+      <GradientCTA label="Criar tarefa de remarcação · opt-in" />
+    </MissedFrame>
+  );
+}
+
+/* ── M2 — Cards ─────────────────────────────────────────────────────── */
+function MM2Cards() {
+  return (
+    <MissedFrame>
+      <div className="flex flex-wrap items-baseline gap-2">
+        <span className="gradient-text text-2xl font-bold">{missedLeads.length} no-shows</span>
+        <span className="text-xs text-muted-foreground">· {BRL(missedTotalCents / 100)} em proposta parada</span>
+      </div>
+      <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
+        {[...missedLeads].sort((a, b) => a.days - b.days).map((l) => (
+          <div key={l.email} className={cn("rounded-xl border bg-card/40 p-3", l.origin === missedDominant?.origin ? "border-amber-500/30" : "border-border")}>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">{initials(l.name)}</span>
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-medium text-foreground">{l.name}</div>
+                  <div className="truncate text-[11px] text-muted-foreground">{l.origin}</div>
+                </div>
+              </div>
+              <span className="shrink-0 rounded-full border border-border px-2 py-0.5 text-[10px] font-medium tabular-nums text-muted-foreground">há {l.days}d</span>
+            </div>
+            <div className="mt-2.5 flex items-center justify-between">
+              <span className="text-sm font-medium tabular-nums text-foreground">{BRL(l.cardCents / 100)}</span>
+              <span className="text-[11px] text-muted-foreground">{l.missedCount > 1 ? `${l.missedCount}× furou` : "card aberto"}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      <GradientCTA label="Rediscagem pro mesmo SDR · opt-in" />
+    </MissedFrame>
+  );
+}
+
+/* ── M3 — Padrão por origem ─────────────────────────────────────────── */
+function MM3Origin() {
+  const max = Math.max(...missedOriginPattern.map((o) => o.count));
+  return (
+    <MissedFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Reuniões perdidas por origem</p>
+      <div className="mt-2 flex items-end gap-2">
+        <span className="gradient-text text-4xl font-bold tracking-tight">{missedLeads.length}</span>
+        <span className="mb-1 text-sm text-muted-foreground">no-shows · {BRL(missedTotalCents / 100)} parados</span>
+      </div>
+      <div className="mt-5 flex flex-col gap-3">
+        {missedOriginPattern.map((o) => {
+          const isDom = o.origin === missedDominant?.origin;
+          return (
+            <div key={o.origin}>
+              <div className="mb-1 flex items-center justify-between gap-2 text-sm">
+                <span className={cn("truncate", isDom ? "font-medium text-amber-400" : "text-foreground")}>{o.origin}</span>
+                <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{o.count} · {Math.round(o.share * 100)}%</span>
+              </div>
+              <div className="h-2.5 overflow-hidden rounded-full bg-muted">
+                <div className={cn("h-full rounded-full", isDom ? "bg-amber-500" : "bg-zinc-500")} style={{ width: `${(o.count / max) * 100}%` }} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div className="mt-5"><DominantOriginNote /></div>
+      <GradientCTA label="Auditar a origem dominante · opt-in" />
+    </MissedFrame>
+  );
+}
+
+/* ── M4 — Tabela ────────────────────────────────────────────────────── */
+function MM4Table() {
+  const sorted = [...missedLeads].sort((a, b) => a.days - b.days);
+  return (
+    <MissedFrame>
+      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-2">
+        <span className="gradient-text text-2xl font-bold">{BRL(missedTotalCents / 100)}</span>
+        <span className="text-xs text-muted-foreground">{missedLeads.length} no-shows · {missedStats.rescheduled} remarcadas excluídas</span>
+      </div>
+      <div className="overflow-x-auto rounded-lg border border-border">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
+              <th className="px-3 py-2 font-medium">Lead</th>
+              <th className="px-3 py-2 font-medium">Origem</th>
+              <th className="px-3 py-2 font-medium">Faltou</th>
+              <th className="px-3 py-2 text-right font-medium">Card</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sorted.map((l) => {
+              const isDom = l.origin === missedDominant?.origin;
+              return (
+                <tr key={l.email} className={cn("border-b border-border last:border-0 hover:bg-accent/40", isDom && "bg-amber-500/[0.04]")}>
+                  <td className="px-3 py-2">
+                    <div className="flex items-center gap-1.5 font-medium text-foreground">
+                      {l.name}
+                      {l.missedCount > 1 && <span className="rounded-full border border-red-500/30 bg-red-500/10 px-1 text-[10px] font-medium text-red-400">{l.missedCount}×</span>}
+                    </div>
+                  </td>
+                  <td className="px-3 py-2 text-xs text-muted-foreground">
+                    <span className={cn(isDom && "text-amber-400")}>{l.origin}</span>
+                  </td>
+                  <td className="px-3 py-2 text-xs tabular-nums text-muted-foreground">há {l.days}d</td>
+                  <td className="px-3 py-2 text-right tabular-nums text-foreground">{BRL(l.cardCents / 100)}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <GradientCTA label="Exportar no-shows · opt-in" />
+    </MissedFrame>
+  );
+}
+
+/* ── M5 — Métrica hero ──────────────────────────────────────────────── */
+function MM5Metric() {
+  return (
+    <MissedFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Proposta parada na etapa da reunião</p>
+      <div className="mt-2">
+        <span className="gradient-text text-5xl font-bold tracking-tight">{BRL(missedTotalCents / 100)}</span>
+      </div>
+      <p className="mt-1 text-sm text-muted-foreground">em {missedLeads.length} reuniões que furaram e ninguém remarcou</p>
+      <div className="mt-5 grid grid-cols-3 gap-3">
+        <div className="rounded-xl border border-border bg-card/40 p-3">
+          <div className="text-2xl font-bold tabular-nums text-foreground">{missedStats.missed}</div>
+          <div className="mt-0.5 text-[11px] text-muted-foreground">reuniões na janela</div>
+        </div>
+        <div className="rounded-xl border border-border bg-card/40 p-3">
+          <div className="text-2xl font-bold tabular-nums text-emerald-400">{missedStats.rescheduled}</div>
+          <div className="mt-0.5 text-[11px] text-muted-foreground">remarcadas (saíram)</div>
+        </div>
+        <div className="rounded-xl border border-border bg-card/40 p-3">
+          <div className="text-2xl font-bold tabular-nums text-foreground">{missedStats.assumed}</div>
+          <div className="mt-0.5 text-[11px] text-muted-foreground">provável-aconteceu</div>
+        </div>
+      </div>
+      <div className="mt-3"><DominantOriginNote /></div>
+      <GradientCTA label="Abrir lista de rediscagem · opt-in" />
+    </MissedFrame>
+  );
+}
+
+function MissedMeetingResult() {
+  return (
+    <div className="flex flex-col gap-9">
+      <Variation n={1} title="Por reunião mais recente"><MM1List /></Variation>
+      <Variation n={2} title="Cards por lead"><MM2Cards /></Variation>
+      <Variation n={3} title="Padrão por origem"><MM3Origin /></Variation>
+      <Variation n={4} title="Tabela"><MM4Table /></Variation>
+      <Variation n={5} title="Valor parado (hero)"><MM5Metric /></Variation>
+    </div>
+  );
+}
+
 /** Registro: id do componente → componente de resultado. */
 export const resultComponents: Record<string, ComponentType> = {
   "card-declined-recovery-list": CardDeclinedRecoveryResult,
@@ -3237,6 +3492,7 @@ export const resultComponents: Record<string, ComponentType> = {
   "inactive-subscribers-no-member-access": InactiveSubscribersResult,
   "win-back-canceled-then-one-time": WinbackResult,
   "expiring-trial-not-converted": ExpiringTrialResult,
+  "missed-meeting-not-rescheduled": MissedMeetingResult,
 };
 
 export function getResultComponent(id: string): ComponentType | undefined {

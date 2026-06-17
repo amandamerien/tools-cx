@@ -14,6 +14,7 @@ import naoAssinantesAltoValor from "@/content/playbooks/analise/nao-assinantes-a
 import assinantesInativosSemAcesso from "@/content/playbooks/analise/assinantes-inativos-sem-acesso.md?raw";
 import assinanteInativoComprou from "@/content/playbooks/analise/assinante-inativo-comprou-uma-unica-vez.md?raw";
 import julgamentoFinalNaoConvertido from "@/content/playbooks/analise/julgamento-final-ainda-nao-convertido.md?raw";
+import reuniaoFaltadaNaoRemarcada from "@/content/playbooks/analise/reuniao-faltada-nao-remarcada.md?raw";
 
 export interface Playbook {
   /** Rótulo do grupo (ex: "Resgate · recuperação de vendas") */
@@ -448,6 +449,40 @@ export const playbooks: Record<string, Playbook> = {
     ],
     body: julgamentoFinalNaoConvertido,
     resultId: "expiring-trial-not-converted",
+  },
+  "/analise/comercial-agenda-e-pipeline/reuniao-faltada-nao-remarcada": {
+    group: "Comercial · agenda e pipeline",
+    groupEmoji: "📞",
+    agent: "Vinícius + Lara",
+    title: "reunião faltada não remarcada",
+    summary:
+      "Use quando o usuário solicitar leads cuja reunião foi agendada recentemente, não aconteceu e nunca foi remarcada.",
+    gatilhos: [
+      "reunião não aconteceu",
+      "reunião marcada que sumiu",
+      "ninguém remarcou",
+      "reuniões perdidas do mês",
+      "no-show sem remarcação",
+      "reunião perdida",
+      "Reunião não remarcada",
+    ],
+    perguntas: [
+      "Quais reuniões dos últimos 30 dias não aconteceram e ninguém remarcou?",
+      "Lista de no-shows sem remarcação — quanto de proposta tá parado?",
+      "Reuniões perdidas por origem: tem algum anúncio concentrando os furos?",
+      "Quem furou a reunião e tem card aberto? Quero priorizar a rediscagem.",
+      "Reuniões marcadas que sumiram da agenda — quem são os leads?",
+    ],
+    ferramentas: [
+      "lista_de_atividades_do_sistema",
+      "lista_de_atividades_por_lead",
+      "leads_get",
+      "lista_de_cartões_por_lead",
+      "pergunta",
+      "executar",
+    ],
+    body: reuniaoFaltadaNaoRemarcada,
+    resultId: "missed-meeting-not-rescheduled",
   },
 };
 
