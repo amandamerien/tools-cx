@@ -5307,6 +5307,276 @@ function CrossUpsellResult() {
   );
 }
 
+/* ════════════════════════════════════════════════════════════════════════
+   weekly-stalled-money-summary — resumo de segunda: 4 frentes, top 3 ações
+   ════════════════════════════════════════════════════════════════════════ */
+
+interface Front {
+  key: string;
+  label: string;
+  agent: string;
+  specialist: string;
+  count: number;
+  estCents: number;
+  ease: number;
+  horizon: string;
+  button: string;
+  sample: { name: string; meta: string }[];
+}
+
+const weeklyFrontsRaw: Front[] = [
+  { key: "mensalidades", label: "Mensalidades falhadas", agent: "Rebeca", specialist: "renovação da assinatura falhada", count: 47, estCents: 35280000, ease: 1.0, horizon: "MRR anualizado", button: "Disparar flow de atualização de cartão", sample: [{ name: "Marina Alves", meta: "Clube Pro · R$ 97/mês" }, { name: "Diego Martins", meta: "Mentoria · R$ 197/mês" }, { name: "Rafael Souza", meta: "Clube Pro · R$ 97/mês" }] },
+  { key: "concluintes", label: "Concluintes sem compra recente", agent: "Cassio", specialist: "concluinte do curso sem compra recente", count: 142, estCents: 3408000, ease: 0.7, horizon: "estimativa one-off", button: "Criar campanha pros concluintes", sample: [{ name: "Patrícia G.", meta: "concluiu há 5d" }, { name: "Lucas M.", meta: "concluiu há 8d" }, { name: "Ana B.", meta: "concluiu há 12d" }] },
+  { key: "inativos", label: "Inativos ainda engajados", agent: "Diego", specialist: "clientes inativos ainda abrem e-mails", count: 207, estCents: 3600000, ease: 0.6, horizon: "estimativa one-off", button: "Sequência de reativação", sample: [{ name: "Patrícia Gomes", meta: "ouro · R$ 6.900 LTV" }, { name: "Ricardo Sá", meta: "ouro · R$ 4.137 LTV" }] },
+  { key: "leads_ouro", label: "Leads-ouro parados", agent: "Vinícius", specialist: "leads quentes sem contato recente", count: 89, estCents: 2136000, ease: 0.8, horizon: "estimativa one-off", button: "Criar tarefas pro closer", sample: [{ name: "Maria Santos", meta: "nota 92" }, { name: "Carlos Eduardo", meta: "nota 88" }] },
+];
+
+const weeklyFronts = weeklyFrontsRaw
+  .map((f) => ({ ...f, score: Math.round(f.estCents * f.ease) }))
+  .sort((a, b) => b.score - a.score);
+const weeklyTop3 = weeklyFronts.slice(0, 3);
+const weeklyTotalCents = weeklyFronts.reduce((s, f) => s + f.estCents, 0);
+const weeklyMedals = ["🥇", "🥈", "🥉"];
+const weeklyTools = ["painel_minhas_vendas", "leads_search", "lista_de_atividades_do_sistema", "executar"];
+
+/** Rótulo de facilidade da ação a partir do peso de esforço. */
+function easeLabel(ease: number) {
+  if (ease >= 1) return "1 botão";
+  if (ease >= 0.8) return "rápido";
+  if (ease >= 0.7) return "campanha";
+  return "curadoria";
+}
+
+function WeeklyFrame({ children }: { children: ReactNode }) {
+  return (
+    <ResultFrame orchestration="WEEKLY_HIDDEN_MONEY_SUMMARY" tag="Orquestrador" tools={weeklyTools}>
+      {children}
+    </ResultFrame>
+  );
+}
+
+function WeeklyPremise() {
+  return (
+    <p className="text-xs italic leading-relaxed text-muted-foreground">
+      “Resumo da semana — varri 4 frentes em paralelo e ranqueei por impacto
+      estimado × facilidade da ação. Cada botão é opt-in.”
+    </p>
+  );
+}
+
+/** Botão de ação opt-in (branco, shadcn primary). */
+function ActionButton({ label }: { label: string }) {
+  return (
+    <button type="button" className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-foreground px-4 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/90">
+      {label} <ArrowRight className="size-4" />
+    </button>
+  );
+}
+
+/** Ressalva: estimativas com proxies, horizontes diferentes. */
+function EstimateNote() {
+  return (
+    <div className="flex items-center gap-2.5 rounded-lg border border-border bg-muted/30 px-3 py-2">
+      <AlertTriangle className="size-3.5 shrink-0 text-muted-foreground" />
+      <p className="text-[11px] leading-relaxed text-muted-foreground">
+        Valores estimados com proxies de conversão — não receita garantida. O total soma horizontes diferentes (anualizado × one-off).
+      </p>
+    </div>
+  );
+}
+
+/* ── W1 — Top 3 ações (briefing) ────────────────────────────────────── */
+function WS1Top3() {
+  return (
+    <WeeklyFrame>
+      <WeeklyPremise />
+      <div className="mt-3 flex flex-wrap items-end gap-x-2 gap-y-1">
+        <span className="gradient-text text-4xl font-bold tracking-tight">{BRL(weeklyTotalCents / 100)}</span>
+        <span className="mb-1 text-base font-medium text-foreground">de dinheiro oculto estimado</span>
+      </div>
+      <p className="mt-1 text-xs text-muted-foreground">4 frentes varridas · top 3 ações por impacto × facilidade</p>
+      <div className="mt-4 flex flex-col gap-3">
+        {weeklyTop3.map((f, i) => (
+          <div key={f.key} className={cn("rounded-2xl border bg-card/40 p-4", i === 0 ? "border-brand/30" : "border-border")}>
+            <div className="flex items-center gap-2">
+              <span className="text-lg leading-none">{weeklyMedals[i]}</span>
+              <span className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">{f.label}</span>
+              <span className="shrink-0 rounded-full border border-border bg-muted/60 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">{easeLabel(f.ease)}</span>
+            </div>
+            <div className="mt-2 flex items-end justify-between gap-2">
+              <div>
+                <span className="text-2xl font-bold tabular-nums text-foreground">{BRL(f.estCents / 100)}</span>
+                <span className="ml-1.5 text-[11px] text-muted-foreground">{f.horizon}</span>
+              </div>
+              <span className="shrink-0 text-xs text-muted-foreground">{f.count} pessoas</span>
+            </div>
+            <div className="mt-2.5 flex items-center gap-1.5">
+              <div className="flex -space-x-2">
+                {f.sample.slice(0, 3).map((p) => (
+                  <span key={p.name} className="flex size-6 items-center justify-center rounded-full border border-background bg-muted text-[9px] font-medium text-muted-foreground">{initials(p.name)}</span>
+                ))}
+              </div>
+              <span className="truncate text-[11px] text-muted-foreground">{f.sample[0].name} · {f.sample[0].meta}{f.count > f.sample.length ? ` · +${f.count - f.sample.length}` : ""}</span>
+            </div>
+            <ActionButton label={f.button} />
+            <p className="mt-2 text-center text-[11px] text-brand">Aprofundar com {f.agent} → {f.specialist}</p>
+          </div>
+        ))}
+      </div>
+      <div className="mt-4"><EstimateNote /></div>
+    </WeeklyFrame>
+  );
+}
+
+/* ── W2 — 4 frentes (cards) ─────────────────────────────────────────── */
+function WS2Fronts() {
+  return (
+    <WeeklyFrame>
+      <div className="flex flex-wrap items-baseline gap-2">
+        <span className="gradient-text text-2xl font-bold">{BRL(weeklyTotalCents / 100)}</span>
+        <span className="text-xs text-muted-foreground">em 4 frentes de dinheiro oculto</span>
+      </div>
+      <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
+        {weeklyFronts.map((f, i) => (
+          <div key={f.key} className={cn("rounded-xl border bg-card/40 p-3", i === 0 ? "border-brand/30" : "border-border")}>
+            <div className="flex items-center justify-between gap-2">
+              <span className="min-w-0 truncate text-sm font-medium text-foreground">{f.label}</span>
+              <span className="shrink-0 rounded-full border border-border bg-muted/60 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">{f.agent}</span>
+            </div>
+            <div className="mt-2 flex items-baseline justify-between">
+              <span className="text-lg font-bold tabular-nums text-foreground">{BRL(f.estCents / 100)}</span>
+              <span className="text-[11px] text-muted-foreground">{f.count} pessoas</span>
+            </div>
+            <div className="mt-1 flex items-center gap-1.5 text-[10px] text-muted-foreground">
+              <span className="rounded border border-border px-1 py-0.5">{easeLabel(f.ease)}</span>
+              <span>{f.horizon}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      <GradientCTA label="Abrir o top 3 com botões · opt-in" />
+    </WeeklyFrame>
+  );
+}
+
+/* ── W3 — Impacto × facilidade (matriz) ─────────────────────────────── */
+function WS3Matrix() {
+  const maxVal = Math.max(...weeklyFronts.map((f) => f.estCents));
+  return (
+    <WeeklyFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Impacto × facilidade da ação</p>
+      <p className="mt-1 text-xs text-muted-foreground">Canto superior direito = muito dinheiro, pouco esforço (ataque primeiro)</p>
+      <div className="relative mt-5 ml-7 h-52 border-l border-b border-border">
+        <span className="absolute -left-7 top-0 text-[10px] text-muted-foreground">R$ alto</span>
+        <span className="absolute -left-6 -bottom-1 text-[10px] text-muted-foreground">R$ 0</span>
+        <span className="absolute -bottom-5 left-0 text-[10px] text-muted-foreground">difícil</span>
+        <span className="absolute -bottom-5 right-0 text-[10px] text-muted-foreground">1 botão</span>
+        <span className="pointer-events-none absolute right-2 top-2 text-[10px] font-medium text-brand/70">atacar 1º</span>
+        {weeklyFronts.map((f, i) => {
+          const left = Math.min(95, ((f.ease - 0.5) / 0.5) * 100);
+          const bottom = Math.min(92, (f.estCents / maxVal) * 92);
+          const size = i === 0 ? 18 : 12;
+          return (
+            <div key={f.key} className="group absolute -translate-x-1/2 translate-y-1/2" style={{ left: `${left}%`, bottom: `${bottom}%` }}>
+              <span className={cn("block rounded-full ring-2 ring-background", i === 0 ? "gradient-brand shadow-[0_0_10px] shadow-brand/40" : "bg-muted-foreground")} style={{ width: size, height: size }} />
+              <span className="pointer-events-none absolute left-1/2 top-full mt-1 -translate-x-1/2 whitespace-nowrap rounded bg-popover px-1.5 py-0.5 text-[10px] text-foreground opacity-0 shadow transition-opacity group-hover:opacity-100">{f.label} · {BRL(f.estCents / 100)}</span>
+            </div>
+          );
+        })}
+      </div>
+      <div className="mt-7 flex items-center gap-3 rounded-xl border border-brand/30 bg-brand/[0.06] p-3">
+        <Sparkles className="size-4 shrink-0 text-brand" />
+        <p className="text-xs leading-relaxed text-foreground">
+          <span className="font-semibold">{weeklyTop3[0].label}</span> ({BRL(weeklyTop3[0].estCents / 100)}, {easeLabel(weeklyTop3[0].ease)}) é a ação de maior alavancagem da semana.
+        </p>
+      </div>
+      <GradientCTA label="Atacar a frente de maior alavancagem · opt-in" />
+    </WeeklyFrame>
+  );
+}
+
+/* ── W4 — Tabela das frentes ────────────────────────────────────────── */
+function WS4Table() {
+  return (
+    <WeeklyFrame>
+      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-2">
+        <span className="gradient-text text-2xl font-bold">{BRL(weeklyTotalCents / 100)}</span>
+        <span className="text-xs text-muted-foreground">4 frentes · ranqueadas por impacto × facilidade</span>
+      </div>
+      <div className="overflow-x-auto rounded-lg border border-border">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
+              <th className="px-3 py-2 font-medium">Frente</th>
+              <th className="px-3 py-2 text-center font-medium">Pessoas</th>
+              <th className="px-3 py-2 font-medium">Esforço</th>
+              <th className="px-3 py-2 text-right font-medium">Estimado</th>
+            </tr>
+          </thead>
+          <tbody>
+            {weeklyFronts.map((f, i) => (
+              <tr key={f.key} className={cn("border-b border-border last:border-0 hover:bg-accent/40", i === 0 && "bg-brand/[0.04]")}>
+                <td className="px-3 py-2">
+                  <div className="flex items-center gap-1.5 font-medium text-foreground">{i < 3 && <span>{weeklyMedals[i]}</span>}{f.label}</div>
+                  <div className="text-xs text-muted-foreground">{f.agent} · {f.horizon}</div>
+                </td>
+                <td className="px-3 py-2 text-center tabular-nums text-muted-foreground">{f.count}</td>
+                <td className="px-3 py-2"><span className="rounded-full border border-border bg-muted/60 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">{easeLabel(f.ease)}</span></td>
+                <td className="px-3 py-2 text-right font-semibold tabular-nums text-foreground">{BRL(f.estCents / 100)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="mt-3"><EstimateNote /></div>
+      <GradientCTA label="Abrir as ações por frente · opt-in" />
+    </WeeklyFrame>
+  );
+}
+
+/* ── W5 — Ação nº 1 (hero) ──────────────────────────────────────────── */
+function WS5Hero() {
+  const top = weeklyTop3[0];
+  return (
+    <WeeklyFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Ação nº 1 da semana</p>
+      <div className="mt-3 flex items-center gap-2">
+        <span className="text-2xl leading-none">🥇</span>
+        <span className="text-lg font-semibold text-foreground">{top.label}</span>
+      </div>
+      <div className="mt-3 flex items-end gap-2">
+        <span className="gradient-text text-5xl font-bold tracking-tight">{BRL(top.estCents / 100)}</span>
+        <span className="mb-1 text-sm text-muted-foreground">{top.horizon}</span>
+      </div>
+      <p className="mt-1 text-sm text-muted-foreground">{top.count} pessoas · {easeLabel(top.ease)} · com {top.agent}</p>
+      <ActionButton label={top.button} />
+      <p className="mt-2 text-center text-[11px] text-brand">Aprofundar → {top.specialist}</p>
+      <div className="mt-5 grid grid-cols-3 gap-3">
+        {weeklyFronts.slice(1, 4).map((f, i) => (
+          <div key={f.key} className="rounded-xl border border-border bg-card/40 p-3">
+            <div className="text-[10px] text-muted-foreground">{weeklyMedals[i + 1]} {f.label.split(" ")[0]}</div>
+            <div className="mt-1 text-lg font-bold tabular-nums text-foreground">{BRL(f.estCents / 100)}</div>
+            <div className="text-[10px] text-muted-foreground">{f.count} pessoas</div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-3"><EstimateNote /></div>
+    </WeeklyFrame>
+  );
+}
+
+function WeeklySummaryResult() {
+  return (
+    <div className="flex flex-col gap-9">
+      <Variation n={1} title="Top 3 ações (briefing)"><WS1Top3 /></Variation>
+      <Variation n={2} title="4 frentes (cards)"><WS2Fronts /></Variation>
+      <Variation n={3} title="Impacto × facilidade"><WS3Matrix /></Variation>
+      <Variation n={4} title="Tabela das frentes"><WS4Table /></Variation>
+      <Variation n={5} title="Ação nº 1 (hero)"><WS5Hero /></Variation>
+    </div>
+  );
+}
+
 /** Registro: id do componente → componente de resultado. */
 export const resultComponents: Record<string, ComponentType> = {
   "card-declined-recovery-list": CardDeclinedRecoveryResult,
@@ -5329,6 +5599,7 @@ export const resultComponents: Record<string, ComponentType> = {
   "cooled-leads-by-funnel": CooledLeadsResult,
   "campaign-ltv-scale-decision": CampaignScaleResult,
   "cross-product-upsell-candidates": CrossUpsellResult,
+  "weekly-stalled-money-summary": WeeklySummaryResult,
 };
 
 export function getResultComponent(id: string): ComponentType | undefined {

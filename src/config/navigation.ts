@@ -156,7 +156,7 @@ export const navigation: NavSection[] = [
         title: "Orquestrador · resumo da semana",
         emoji: "🔥",
         count: 1,
-        children: [{ title: "resumo semanal do dinheiro parado" }],
+        children: [{ title: "resumo semanal do dinheiro oculto" }],
       },
       {
         title: "Novos · proatividade e atendimento",

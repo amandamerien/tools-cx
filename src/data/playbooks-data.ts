@@ -22,6 +22,7 @@ import clientesInativosAbrem from "@/content/playbooks/analise/clientes-inativos
 import resfriadosPorFunil from "@/content/playbooks/analise/resfriados-por-funil.md?raw";
 import decisaoEscalaCampanha from "@/content/playbooks/analise/decisao-de-escala-de-campanha.md?raw";
 import candidatosUpsellCruzado from "@/content/playbooks/analise/candidatos-a-upsell-de-produtos-cruzados.md?raw";
+import resumoSemanalDinheiroOculto from "@/content/playbooks/analise/resumo-semanal-do-dinheiro-oculto.md?raw";
 
 export interface Playbook {
   /** Rótulo do grupo (ex: "Resgate · recuperação de vendas") */
@@ -730,6 +731,42 @@ export const playbooks: Record<string, Playbook> = {
     ],
     body: candidatosUpsellCruzado,
     resultId: "cross-product-upsell-candidates",
+  },
+  "/analise/orquestrador-resumo-da-semana/resumo-semanal-do-dinheiro-oculto": {
+    group: "Orquestrador · resumo da semana",
+    groupEmoji: "🔥",
+    agent: "squad inteira",
+    title: "resumo semanal do dinheiro oculto",
+    summary:
+      "Utilize quando o usuário solicitar o resumo semanal do dinheiro oculto ou quando a execução programada para segunda-feira de manhã varrer todas as frentes em paralelo e classificar as 3 principais ações por impacto × esforço.",
+    gatilhos: [
+      "que dinheiro estou perdendo essa semana",
+      "resumo da semana",
+      "dinheiro escondido na minha base",
+      "o que atacar primeiro essa semana",
+      "minhas 3 melhores ações essa semana",
+      "resumo semanal",
+      "Dinheiro escondido esta semana",
+      "Resumo de segunda-feira",
+    ],
+    perguntas: [
+      "Qual dinheiro tô perdendo essa semana? Me dá as 3 melhores ações.",
+      "Resumo da semana: o que atacar primeiro por impacto × facilidade?",
+      "Roda o resumo de segunda — varre tudo e ranqueia pra mim.",
+      "Quanto de dinheiro escondido tem na minha base agora?",
+      "Quais minhas 3 melhores ações dessa semana e com qual botão cada uma?",
+    ],
+    ferramentas: [
+      "painel_minhas_vendas",
+      "lista_de_assinaturas",
+      "lista_de_atividades_do_sistema",
+      "esquema_de_filtro_de_leads",
+      "leads_search",
+      "pergunta",
+      "executar",
+    ],
+    body: resumoSemanalDinheiroOculto,
+    resultId: "weekly-stalled-money-summary",
   },
 };
 
