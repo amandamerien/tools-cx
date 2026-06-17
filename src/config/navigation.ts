@@ -163,7 +163,7 @@ export const navigation: NavSection[] = [
         emoji: "✨",
         count: 2,
         children: [
-          { title: "descoberta de padrões de comportamento" },
+          { title: "descoberta de padrões de campos personalizados" },
           { title: "monitor de caixa de entrada" },
         ],
       },

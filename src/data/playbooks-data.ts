@@ -23,6 +23,7 @@ import resfriadosPorFunil from "@/content/playbooks/analise/resfriados-por-funil
 import decisaoEscalaCampanha from "@/content/playbooks/analise/decisao-de-escala-de-campanha.md?raw";
 import candidatosUpsellCruzado from "@/content/playbooks/analise/candidatos-a-upsell-de-produtos-cruzados.md?raw";
 import resumoSemanalDinheiroOculto from "@/content/playbooks/analise/resumo-semanal-do-dinheiro-oculto.md?raw";
+import descobertaPadroesCampos from "@/content/playbooks/analise/descoberta-de-padroes-de-campos-personalizados.md?raw";
 
 export interface Playbook {
   /** Rótulo do grupo (ex: "Resgate · recuperação de vendas") */
@@ -767,6 +768,39 @@ export const playbooks: Record<string, Playbook> = {
     ],
     body: resumoSemanalDinheiroOculto,
     resultId: "weekly-stalled-money-summary",
+  },
+  "/analise/novos-proatividade-e-atendimento/descoberta-de-padroes-de-campos-personalizados": {
+    group: "Novos · proatividade e atendimento",
+    groupEmoji: "✨",
+    agent: "Diego + Vinícius",
+    title: "descoberta de padrões de campos personalizados",
+    summary:
+      "Utilize esta opção quando o usuário perguntar quais padrões existem nos campos personalizados de seus leads, ou quando uma execução de descoberta agendada procurar por segmentos baseados em campos que convertem ou gastam acima da taxa base.",
+    gatilhos: [
+      "que padrões existem nos meus campos customizados",
+      "analisa meus campos personalizados",
+      "o que meus leads têm em comum",
+      "que perfil de lead compra mais",
+      "padrões de campos personalizados",
+      "enriquecer meus segmentos",
+      "segmentos de leads ocultos",
+    ],
+    perguntas: [
+      "Que padrões existem nos meus campos customizados de leads?",
+      "Que perfil de lead compra mais — qual campo declarado prevê conversão?",
+      "Tem algum segmento oculto que converte ou gasta acima da base?",
+      "Analisa meus campos personalizados e me diz o que importa.",
+      "Qual valor de campo customizado tem o maior lift de receita?",
+    ],
+    ferramentas: [
+      "esquema_de_filtro_de_leads",
+      "leads_search",
+      "painel_minhas_vendas",
+      "pergunta",
+      "executar",
+    ],
+    body: descobertaPadroesCampos,
+    resultId: "custom-field-pattern-discovery",
   },
 };
 

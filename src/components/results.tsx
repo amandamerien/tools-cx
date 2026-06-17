@@ -5577,6 +5577,264 @@ function WeeklySummaryResult() {
   );
 }
 
+/* ════════════════════════════════════════════════════════════════════════
+   custom-field-pattern-discovery — padrões emergentes nos campos customizados
+   ════════════════════════════════════════════════════════════════════════ */
+
+interface FieldPattern {
+  field: string;
+  value: string;
+  segmentSize: number;
+  conversion: number;
+  liftConv: number;
+  avgRevCents: number;
+  liftRev: number;
+}
+
+const fieldPatternsRaw: FieldPattern[] = [
+  { field: "renda_mensal", value: "> R$ 15.000", segmentSize: 96, conversion: 0.31, liftConv: 2.6, avgRevCents: 68000, liftRev: 2.0 },
+  { field: "profissão", value: "dentista", segmentSize: 48, conversion: 0.28, liftConv: 2.3, avgRevCents: 81200, liftRev: 2.4 },
+  { field: "origem_indicação", value: "sim", segmentSize: 58, conversion: 0.27, liftConv: 2.2, avgRevCents: 59000, liftRev: 1.7 },
+  { field: "cargo", value: "sócio / diretor", segmentSize: 41, conversion: 0.24, liftConv: 2.0, avgRevCents: 71000, liftRev: 2.1 },
+  { field: "tem_empresa", value: "sim", segmentSize: 142, conversion: 0.22, liftConv: 1.8, avgRevCents: 52000, liftRev: 1.5 },
+  { field: "faixa_etária", value: "35–44", segmentSize: 210, conversion: 0.18, liftConv: 1.5, avgRevCents: 41000, liftRev: 1.2 },
+];
+
+const bestLift = (p: FieldPattern) => Math.max(p.liftConv, p.liftRev);
+const patternScore = (p: FieldPattern) => bestLift(p) * Math.sqrt(p.segmentSize);
+const fieldPatterns = [...fieldPatternsRaw].sort((a, b) => patternScore(b) - patternScore(a));
+const patBaseConversion = 0.12;
+const patBaseAvgCents = 34000;
+const patSampleSize = 1840;
+const patFieldsInSchema = 8;
+const patternTools = ["esquema_de_filtro_de_leads", "leads_search", "painel_minhas_vendas", "executar"];
+
+/** Lift forte → lime; moderado → âmbar. */
+function liftTone(lift: number) {
+  return lift >= 2 ? "border-brand/40 bg-brand/10 text-brand" : "border-amber-500/30 bg-amber-500/10 text-amber-400";
+}
+const fieldLabel = (f: string) => f.replace(/_/g, " ");
+
+function PatternFrame({ children }: { children: ReactNode }) {
+  return (
+    <ResultFrame orchestration="CUSTOM_FIELD_PATTERN_DISCOVERY" tag="CRM" tools={patternTools}>
+      {children}
+    </ResultFrame>
+  );
+}
+
+function PatternPremise() {
+  return (
+    <p className="text-xs italic leading-relaxed text-muted-foreground">
+      “Analisei os {patFieldsInSchema} campos customizados numa amostra de {patSampleSize} leads,
+      cruzando cada segmento com a receita paga. Base: {Math.round(patBaseConversion * 100)}% conversão · {BRL(patBaseAvgCents / 100)} receita média.”
+    </p>
+  );
+}
+
+/** Correlação ≠ causação (citado uma vez). */
+function CausationNote() {
+  return (
+    <div className="flex items-center gap-2.5 rounded-lg border border-border bg-muted/30 px-3 py-2">
+      <AlertTriangle className="size-3.5 shrink-0 text-muted-foreground" />
+      <p className="text-[11px] leading-relaxed text-muted-foreground">
+        Associação na amostra, não causa — leads que declararam X compram mais; declarar X não faz comprar. Lift sem massa engana, por isso o tamanho do segmento aparece sempre.
+      </p>
+    </div>
+  );
+}
+
+function PatternLabel({ p }: { p: FieldPattern }) {
+  return (
+    <span className="flex min-w-0 items-baseline gap-1.5 text-sm">
+      <span className="truncate text-muted-foreground">{fieldLabel(p.field)}</span>
+      <span className="shrink-0 text-muted-foreground/50">=</span>
+      <span className="truncate font-medium text-foreground">{p.value}</span>
+    </span>
+  );
+}
+
+/* ── D1 — Padrões ranqueados ────────────────────────────────────────── */
+function DP1Ranked() {
+  return (
+    <PatternFrame>
+      <PatternPremise />
+      <p className="mt-3 text-sm text-foreground">
+        <span className="font-semibold">{fieldPatterns.length} padrões fortes</span> emergiram dos campos declarados
+      </p>
+      <p className="mt-0.5 text-xs text-muted-foreground">ordenados por força (lift × tamanho) · lift ≥ 1.5× vs. a base</p>
+      <ul className="mt-4 flex flex-col gap-px">
+        {fieldPatterns.map((p) => (
+          <li key={`${p.field}-${p.value}`} className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-accent/50">
+            <div className="min-w-0 flex-1">
+              <PatternLabel p={p} />
+              <div className="mt-0.5 text-xs text-muted-foreground">{p.segmentSize} leads · {BRL(p.avgRevCents / 100)} receita média</div>
+            </div>
+            <span className={cn("shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-medium tabular-nums", liftTone(p.liftConv))}>{p.liftConv}× conv</span>
+            <span className={cn("shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-medium tabular-nums", liftTone(p.liftRev))}>{p.liftRev}× R$</span>
+          </li>
+        ))}
+      </ul>
+      <div className="mt-4 mb-1"><CausationNote /></div>
+      <GradientCTA label="Materializar o padrão campeão como segmento · opt-in" />
+    </PatternFrame>
+  );
+}
+
+/* ── D2 — Cards ─────────────────────────────────────────────────────── */
+function DP2Cards() {
+  return (
+    <PatternFrame>
+      <div className="flex flex-wrap items-baseline gap-2">
+        <span className="gradient-text text-2xl font-bold">{fieldPatterns.length} padrões</span>
+        <span className="text-xs text-muted-foreground">em {patFieldsInSchema} campos · amostra de {patSampleSize}</span>
+      </div>
+      <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
+        {fieldPatterns.map((p) => (
+          <div key={`${p.field}-${p.value}`} className={cn("rounded-xl border bg-card/40 p-3", bestLift(p) >= 2 ? "border-brand/30" : "border-border")}>
+            <PatternLabel p={p} />
+            <div className="mt-2.5 flex items-center justify-between">
+              <span className="text-lg font-bold tabular-nums text-foreground">{bestLift(p)}×</span>
+              <span className="text-[11px] text-muted-foreground">{p.segmentSize} leads</span>
+            </div>
+            <div className="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground">
+              <span>{Math.round(p.conversion * 100)}% conv</span>
+              <span>·</span>
+              <span>{BRL(p.avgRevCents / 100)} receita média</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      <GradientCTA label="Criar segmento dinâmico · opt-in" />
+    </PatternFrame>
+  );
+}
+
+/* ── D3 — Lift × tamanho (matriz) ───────────────────────────────────── */
+function DP3Matrix() {
+  const xMax = Math.max(...fieldPatterns.map((p) => p.segmentSize));
+  const yMax = Math.max(...fieldPatterns.map(bestLift));
+  const champ = fieldPatterns[0];
+  return (
+    <PatternFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Lift × tamanho do segmento</p>
+      <p className="mt-1 text-xs text-muted-foreground">Canto superior direito = lift alto com massa — padrão confiável</p>
+      <div className="relative mt-5 ml-7 h-52 border-l border-b border-border">
+        <span className="absolute -left-7 top-0 text-[10px] text-muted-foreground">{yMax.toFixed(1)}×</span>
+        <span className="absolute -left-6 -bottom-1 text-[10px] text-muted-foreground">1×</span>
+        <span className="absolute -bottom-5 left-0 text-[10px] text-muted-foreground">pequeno</span>
+        <span className="absolute -bottom-5 right-0 text-[10px] text-muted-foreground">{xMax} leads</span>
+        <span className="pointer-events-none absolute right-2 top-2 text-[10px] font-medium text-brand/70">confiável</span>
+        {fieldPatterns.map((p) => {
+          const left = Math.min(95, (p.segmentSize / xMax) * 100);
+          const bottom = Math.min(92, ((bestLift(p) - 1) / (yMax - 1)) * 92);
+          const isChamp = p === champ;
+          return (
+            <div key={`${p.field}-${p.value}`} className="group absolute -translate-x-1/2 translate-y-1/2" style={{ left: `${left}%`, bottom: `${bottom}%` }}>
+              <span className={cn("block rounded-full ring-2 ring-background", isChamp ? "gradient-brand shadow-[0_0_10px] shadow-brand/40" : bestLift(p) >= 2 ? "bg-brand" : "bg-amber-500")} style={{ width: isChamp ? 16 : 11, height: isChamp ? 16 : 11 }} />
+              <span className="pointer-events-none absolute left-1/2 top-full mt-1 -translate-x-1/2 whitespace-nowrap rounded bg-popover px-1.5 py-0.5 text-[10px] text-foreground opacity-0 shadow transition-opacity group-hover:opacity-100">{p.value} · {bestLift(p)}× · {p.segmentSize}</span>
+            </div>
+          );
+        })}
+      </div>
+      <p className="mt-7 text-xs leading-relaxed text-muted-foreground">Em destaque, <span className="font-medium text-foreground">{fieldLabel(champ.field)} = {champ.value}</span> ({bestLift(champ)}× em {champ.segmentSize} leads): o padrão mais forte e confiável.</p>
+      <GradientCTA label="Aprofundar o padrão campeão · opt-in" />
+    </PatternFrame>
+  );
+}
+
+/* ── D4 — Tabela ────────────────────────────────────────────────────── */
+function DP4Table() {
+  return (
+    <PatternFrame>
+      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-2">
+        <span className="gradient-text text-2xl font-bold">{fieldPatterns.length} padrões</span>
+        <span className="text-xs text-muted-foreground">base {Math.round(patBaseConversion * 100)}% · {BRL(patBaseAvgCents / 100)}</span>
+      </div>
+      <div className="overflow-x-auto rounded-lg border border-border">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
+              <th className="px-3 py-2 font-medium">Campo = valor</th>
+              <th className="px-3 py-2 text-center font-medium">Leads</th>
+              <th className="px-3 py-2 text-center font-medium">Lift conv</th>
+              <th className="px-3 py-2 text-right font-medium">Receita média</th>
+            </tr>
+          </thead>
+          <tbody>
+            {fieldPatterns.map((p) => (
+              <tr key={`${p.field}-${p.value}`} className={cn("border-b border-border last:border-0 hover:bg-accent/40", bestLift(p) >= 2 && "bg-brand/[0.04]")}>
+                <td className="px-3 py-2">
+                  <div className="font-medium text-foreground">{p.value}</div>
+                  <div className="text-xs text-muted-foreground">{fieldLabel(p.field)}</div>
+                </td>
+                <td className="px-3 py-2 text-center tabular-nums text-muted-foreground">{p.segmentSize}</td>
+                <td className="px-3 py-2 text-center"><span className={cn("rounded-full border px-1.5 py-0.5 text-[11px] font-medium tabular-nums", liftTone(p.liftConv))}>{p.liftConv}×</span></td>
+                <td className="px-3 py-2 text-right">
+                  <div className="font-semibold tabular-nums text-foreground">{BRL(p.avgRevCents / 100)}</div>
+                  <div className="text-[11px] text-muted-foreground">{p.liftRev}× base</div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="mt-3"><CausationNote /></div>
+      <GradientCTA label="Exportar padrões · opt-in" />
+    </PatternFrame>
+  );
+}
+
+/* ── D5 — Padrão campeão (hero) ─────────────────────────────────────── */
+function DP5Champion() {
+  const c = fieldPatterns[0];
+  return (
+    <PatternFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Padrão mais forte descoberto</p>
+      <div className="mt-3 flex items-baseline gap-2">
+        <span className="text-base text-muted-foreground">{fieldLabel(c.field)} =</span>
+        <span className="text-2xl font-bold text-foreground">{c.value}</span>
+      </div>
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <div className="rounded-xl border border-brand/30 bg-brand/[0.05] p-3">
+          <div className="gradient-text text-3xl font-bold tabular-nums">{c.liftConv}×</div>
+          <div className="mt-0.5 text-[11px] text-muted-foreground">a conversão da base ({Math.round(c.conversion * 100)}% vs {Math.round(patBaseConversion * 100)}%)</div>
+        </div>
+        <div className="rounded-xl border border-brand/30 bg-brand/[0.05] p-3">
+          <div className="gradient-text text-3xl font-bold tabular-nums">{c.liftRev}×</div>
+          <div className="mt-0.5 text-[11px] text-muted-foreground">a receita média ({BRL(c.avgRevCents / 100)} vs {BRL(patBaseAvgCents / 100)})</div>
+        </div>
+      </div>
+      {/* comparação visual */}
+      <div className="mt-4 flex flex-col gap-2.5">
+        <div>
+          <div className="mb-1 flex justify-between text-xs"><span className="text-foreground">Este segmento</span><span className="tabular-nums text-muted-foreground">{Math.round(c.conversion * 100)}% conv</span></div>
+          <div className="h-2.5 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full gradient-brand" style={{ width: `${(c.conversion / 0.4) * 100}%` }} /></div>
+        </div>
+        <div>
+          <div className="mb-1 flex justify-between text-xs"><span className="text-muted-foreground">Base inteira</span><span className="tabular-nums text-muted-foreground">{Math.round(patBaseConversion * 100)}% conv</span></div>
+          <div className="h-2.5 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-muted-foreground" style={{ width: `${(patBaseConversion / 0.4) * 100}%` }} /></div>
+        </div>
+      </div>
+      <p className="mt-3 text-xs text-muted-foreground">Sobre {c.segmentSize} leads na amostra · {patFieldsInSchema} campos analisados, {fieldPatterns.length} com padrão forte.</p>
+      <div className="mt-3"><CausationNote /></div>
+      <GradientCTA label="Virar segmento e disparar campanha · opt-in" />
+    </PatternFrame>
+  );
+}
+
+function FieldPatternResult() {
+  return (
+    <div className="flex flex-col gap-9">
+      <Variation n={1} title="Padrões ranqueados"><DP1Ranked /></Variation>
+      <Variation n={2} title="Cards por padrão"><DP2Cards /></Variation>
+      <Variation n={3} title="Lift × tamanho"><DP3Matrix /></Variation>
+      <Variation n={4} title="Tabela"><DP4Table /></Variation>
+      <Variation n={5} title="Padrão campeão (hero)"><DP5Champion /></Variation>
+    </div>
+  );
+}
+
 /** Registro: id do componente → componente de resultado. */
 export const resultComponents: Record<string, ComponentType> = {
   "card-declined-recovery-list": CardDeclinedRecoveryResult,
@@ -5600,6 +5858,7 @@ export const resultComponents: Record<string, ComponentType> = {
   "campaign-ltv-scale-decision": CampaignScaleResult,
   "cross-product-upsell-candidates": CrossUpsellResult,
   "weekly-stalled-money-summary": WeeklySummaryResult,
+  "custom-field-pattern-discovery": FieldPatternResult,
 };
 
 export function getResultComponent(id: string): ComponentType | undefined {
