@@ -6112,6 +6112,293 @@ function ServiceInboxResult() {
   );
 }
 
+/* ════════════════════════════════════════════════════════════════════════
+   furion-page-section-blueprint — blueprint de página dobra a dobra (Furion)
+   ════════════════════════════════════════════════════════════════════════ */
+
+type BlockKind = "urgency" | "headline" | "subhead" | "video" | "text" | "offer" | "testimonials" | "guarantee" | "qa" | "cta" | "legal" | "footer";
+
+interface BlueprintFold {
+  order: number;
+  section: string;
+  goal: string;
+  directives: string;
+  avatarFields: string[];
+  kind: BlockKind;
+}
+
+const avatarLabels: Record<string, string> = {
+  primaryGoal: "objetivo", primaryComplaint: "dor nº1", promises: "promessas", objections: "objeções",
+  falseSolutions: "soluções falsas", mistakenBeliefs: "crenças erradas", ultimateFear: "medo nº1",
+  commonEnemy: "inimigo comum", convincingEvidence: "provas", expensiveAlternatives: "alternativas caras",
+};
+
+const pbType = "Página de vendas";
+const pbProduct = { name: "Método Acelerador", priceCents: 199700 };
+const pbAvgTicketCents = 84700;
+const pbAvatarGaps = ["ultimateFear", "commonEnemy", "convincingEvidence"];
+const pbTools = ["lista_de_produtos", "paginas_criar", "paginas_publicar", "executar"];
+
+const pbFolds: BlueprintFold[] = [
+  { order: 1, section: "Barra de Urgência", goal: "escassez/prazo real no topo", directives: "só urgência verdadeira (lote, prazo, bônus que expira)", avatarFields: [], kind: "urgency" },
+  { order: 2, section: "Headline", goal: "promessa central + mecanismo único", directives: "lead controverso ou promessa com prazo; nunca genérico", avatarFields: ["primaryGoal", "promises"], kind: "headline" },
+  { order: 3, section: "Subheadline", goal: "especificar a promessa, remover o atrito", directives: 'promessa SEM a dor nº1 ("sem X, mesmo que Y")', avatarFields: ["primaryComplaint"], kind: "subhead" },
+  { order: 4, section: "VSL", goal: "vídeo de vendas como prova e pitch", directives: "só vídeo real fornecido; senão, dobra pendente", avatarFields: ["convincingEvidence"], kind: "video" },
+  { order: 5, section: "Pitch", goal: "conceito-chave + por que tudo falhou", directives: "False Solutions desmontadas → virada pro mecanismo único", avatarFields: ["falseSolutions", "mistakenBeliefs", "commonEnemy"], kind: "text" },
+  { order: 6, section: "História", goal: "jornada dor → descoberta do mecanismo", directives: "narrativa 1ª pessoa: fundo do poço → tentativas → descoberta", avatarFields: ["primaryComplaint", "ultimateFear"], kind: "text" },
+  { order: 7, section: "Oferta", goal: "stack de valor, preço ancorado, bônus", directives: "ancorar contra alternativas caras; itemizar o stack", avatarFields: ["expensiveAlternatives"], kind: "offer" },
+  { order: 8, section: "Depoimentos", goal: "prova social específica", directives: "só reais, com resultado mensurável; nunca fabricar", avatarFields: ["convincingEvidence"], kind: "testimonials" },
+  { order: 9, section: "Garantia", goal: "reverter o risco da compra", directives: "garantia tripla: prazo + resultado + suporte", avatarFields: ["objections", "ultimateFear"], kind: "guarantee" },
+  { order: 10, section: "Q&A", goal: "matar objeções restantes", directives: "cada objeção vira UMA pergunta; 5–8 itens", avatarFields: ["objections"], kind: "qa" },
+  { order: 11, section: "Botão", goal: "CTA único e repetível", directives: 'verbo + benefício ("QUERO [resultado]")', avatarFields: ["primaryGoal"], kind: "cta" },
+  { order: 12, section: "Termos de Uso", goal: "compliance", directives: "links legais + disclaimers de resultado", avatarFields: [], kind: "legal" },
+  { order: 13, section: "Rodapé", goal: "fechamento institucional", directives: "razão social, contato, links legais", avatarFields: [], kind: "footer" },
+];
+
+const foldHasGap = (f: BlueprintFold) => f.avatarFields.some((a) => pbAvatarGaps.includes(a));
+
+function BlueprintFrame({ children }: { children: ReactNode }) {
+  return (
+    <ResultFrame orchestration="FURION_PAGE_SECTION_BLUEPRINT" tag="Furion" tools={pbTools}>
+      {children}
+    </ResultFrame>
+  );
+}
+
+function BlueprintPremise() {
+  return (
+    <p className="text-xs italic leading-relaxed text-muted-foreground">
+      “Blueprint de {pbType.toLowerCase()} dobra a dobra para <span className="not-italic font-medium text-foreground/80">{pbProduct.name}</span> —
+      sequência + copy por seção, aprovar antes de montar. Ticket médio real {BRL(pbAvgTicketCents / 100)} como âncora da Oferta.”
+    </p>
+  );
+}
+
+/** Lacunas de avatar a resolver antes da copy final. */
+function AvatarGapsNote() {
+  if (pbAvatarGaps.length === 0) return null;
+  return (
+    <div className="flex items-start gap-2.5 rounded-lg border border-amber-500/30 bg-amber-500/[0.06] px-3 py-2">
+      <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-amber-400" />
+      <p className="text-[11px] leading-relaxed text-foreground">
+        <span className="font-medium text-amber-400">{pbAvatarGaps.length} campos do avatar sem resposta no dado:</span>{" "}
+        {pbAvatarGaps.map((g) => avatarLabels[g]).join(", ")}. Respondendo, eu refino as dobras que dependem deles — sem inventar dor que o nicho não tem.
+      </p>
+    </div>
+  );
+}
+
+function AvatarChip({ field }: { field: string }) {
+  const gap = pbAvatarGaps.includes(field);
+  return (
+    <span className={cn("rounded border px-1 py-0.5 text-[10px] font-medium", gap ? "border-amber-500/30 bg-amber-500/10 text-amber-400" : "border-border bg-muted/60 text-muted-foreground")}>
+      {avatarLabels[field]}{gap ? " ?" : ""}
+    </span>
+  );
+}
+
+/* ── F1 — Blueprint (sequência de dobras) ───────────────────────────── */
+function FB1Blueprint() {
+  return (
+    <BlueprintFrame>
+      <BlueprintPremise />
+      <p className="mt-3 text-sm text-foreground"><span className="font-semibold">{pbFolds.length} dobras</span> na sequência recomendada · copy guiada por avatar</p>
+      <div className="mt-4 mb-4"><AvatarGapsNote /></div>
+      <ol className="flex flex-col gap-px">
+        {pbFolds.map((f) => (
+          <li key={f.order} className="flex gap-3 rounded-lg px-2 py-2.5 transition-colors hover:bg-accent/50">
+            <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-muted font-mono text-[11px] font-medium text-muted-foreground">{f.order}</span>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm font-medium text-foreground">{f.section}</span>
+                {foldHasGap(f) && <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-medium text-amber-400">depende de lacuna</span>}
+              </div>
+              <p className="mt-0.5 text-xs text-muted-foreground">{f.goal}</p>
+              <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground/80">{f.directives}</p>
+              {f.avatarFields.length > 0 && (
+                <div className="mt-1.5 flex flex-wrap gap-1">{f.avatarFields.map((a) => <AvatarChip key={a} field={a} />)}</div>
+              )}
+            </div>
+          </li>
+        ))}
+      </ol>
+      <GradientCTA label="Aprovar blueprint e criar a página · opt-in" />
+    </BlueprintFrame>
+  );
+}
+
+/* ── F2 — Wireframe da página ───────────────────────────────────────── */
+function WireBlock({ kind }: { kind: BlockKind }) {
+  const bar = (w: string, h = "h-2") => <div className={cn("rounded-full bg-muted-foreground/25", h)} style={{ width: w }} />;
+  switch (kind) {
+    case "urgency":
+      return <div className="flex h-5 items-center justify-center rounded bg-amber-500/20"><div className="h-1.5 w-24 rounded-full bg-amber-500/50" /></div>;
+    case "headline":
+      return <div className="flex flex-col items-center gap-1.5 py-1">{bar("80%", "h-3")}{bar("55%", "h-3")}</div>;
+    case "subhead":
+      return <div className="flex justify-center py-0.5">{bar("65%")}</div>;
+    case "video":
+      return <div className="flex aspect-[16/7] items-center justify-center rounded-md border border-border bg-muted/40"><div className="flex size-7 items-center justify-center rounded-full bg-brand/20"><div className="ml-0.5 size-0 border-y-[5px] border-l-[8px] border-y-transparent border-l-brand" /></div></div>;
+    case "text":
+      return <div className="flex flex-col items-center gap-1 py-1">{bar("90%")}{bar("85%")}{bar("70%")}</div>;
+    case "offer":
+      return <div className="rounded-lg border-2 border-brand/30 bg-brand/[0.04] p-2.5"><div className="mx-auto mb-2 h-2.5 w-20 rounded-full bg-foreground/30" /><div className="flex flex-col gap-1">{bar("100%")}{bar("100%")}</div><div className="mt-2 h-5 rounded-md gradient-brand" /></div>;
+    case "testimonials":
+      return <div className="grid grid-cols-3 gap-1.5">{[0, 1, 2].map((i) => <div key={i} className="flex flex-col items-center gap-1 rounded-md border border-border bg-muted/30 p-1.5"><div className="size-4 rounded-full bg-muted-foreground/30" /><div className="h-1 w-full rounded-full bg-muted-foreground/20" /></div>)}</div>;
+    case "guarantee":
+      return <div className="flex items-center justify-center gap-2 py-1"><div className="flex size-8 items-center justify-center rounded-full border-2 border-brand/40 text-[9px] font-bold text-brand">✓</div>{bar("40%")}</div>;
+    case "qa":
+      return <div className="flex flex-col gap-1">{[0, 1, 2].map((i) => <div key={i} className="flex items-center justify-between rounded border border-border px-2 py-1"><div className="h-1.5 w-2/3 rounded-full bg-muted-foreground/25" /><span className="text-muted-foreground/50">+</span></div>)}</div>;
+    case "cta":
+      return <div className="flex justify-center py-0.5"><div className="h-7 w-44 rounded-lg gradient-brand" /></div>;
+    case "legal":
+    case "footer":
+      return <div className="flex flex-col items-center gap-1 py-0.5">{bar("50%", "h-1")}{bar("35%", "h-1")}</div>;
+  }
+}
+
+function FB2Wireframe() {
+  return (
+    <BlueprintFrame>
+      <p className="text-sm font-medium text-foreground">{pbType} · {pbProduct.name}</p>
+      <p className="mt-0.5 text-xs text-muted-foreground">Wireframe da sequência — {pbFolds.length} dobras, mobile-first</p>
+      <div className="mx-auto mt-4 max-w-[300px] overflow-hidden rounded-2xl border border-border bg-background p-3 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.5)]">
+        <div className="flex flex-col gap-2.5">
+          {pbFolds.map((f) => (
+            <div key={f.order} className="group relative">
+              <div className="mb-1 flex items-center gap-1.5">
+                <span className="font-mono text-[9px] text-muted-foreground/60">{f.order}</span>
+                <span className="text-[10px] font-medium text-muted-foreground">{f.section}</span>
+                {foldHasGap(f) && <span className="size-1.5 rounded-full bg-amber-500" />}
+              </div>
+              <WireBlock kind={f.kind} />
+            </div>
+          ))}
+        </div>
+      </div>
+      <GradientCTA label="Aprovar e montar no editor · opt-in" />
+    </BlueprintFrame>
+  );
+}
+
+/* ── F3 — Tabela de dobras ──────────────────────────────────────────── */
+function FB3Table() {
+  return (
+    <BlueprintFrame>
+      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-2">
+        <span className="gradient-text text-2xl font-bold">{pbFolds.length} dobras</span>
+        <span className="text-xs text-muted-foreground">{pbType} · só-texto (sem imagem aprovada)</span>
+      </div>
+      <div className="overflow-x-auto rounded-lg border border-border">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
+              <th className="px-3 py-2 font-medium">#</th>
+              <th className="px-3 py-2 font-medium">Dobra</th>
+              <th className="px-3 py-2 font-medium">Objetivo</th>
+              <th className="px-3 py-2 font-medium">Avatar</th>
+            </tr>
+          </thead>
+          <tbody>
+            {pbFolds.map((f) => (
+              <tr key={f.order} className={cn("border-b border-border last:border-0 hover:bg-accent/40", foldHasGap(f) && "bg-amber-500/[0.03]")}>
+                <td className="px-3 py-2 font-mono text-xs text-muted-foreground">{f.order}</td>
+                <td className="px-3 py-2 font-medium text-foreground">{f.section}</td>
+                <td className="px-3 py-2 text-xs text-muted-foreground">{f.goal}</td>
+                <td className="px-3 py-2">
+                  {f.avatarFields.length > 0 ? <div className="flex flex-wrap gap-1">{f.avatarFields.map((a) => <AvatarChip key={a} field={a} />)}</div> : <span className="text-xs text-muted-foreground/50">—</span>}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <GradientCTA label="Exportar blueprint · opt-in" />
+    </BlueprintFrame>
+  );
+}
+
+/* ── F4 — Dobra → avatar (dependências) ─────────────────────────────── */
+function FB4Avatar() {
+  const allFields = Object.keys(avatarLabels);
+  const usedBy = (field: string) => pbFolds.filter((f) => f.avatarFields.includes(field));
+  return (
+    <BlueprintFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">De onde nasce a copy · campo → dobras</p>
+      <p className="mt-1 mb-4 text-xs text-muted-foreground">Cada campo do avatar alimenta dobras específicas; em âmbar, os que faltam</p>
+      <div className="flex flex-col gap-px">
+        {allFields.map((field) => {
+          const folds = usedBy(field);
+          if (folds.length === 0) return null;
+          const gap = pbAvatarGaps.includes(field);
+          return (
+            <div key={field} className="flex items-start gap-3 rounded-lg px-2 py-2 hover:bg-accent/50">
+              <div className="flex w-28 shrink-0 items-center gap-1.5">
+                <span className={cn("size-2 shrink-0 rounded-full", gap ? "bg-amber-500" : "bg-brand")} />
+                <span className={cn("text-xs font-medium", gap ? "text-amber-400" : "text-foreground")}>{avatarLabels[field]}</span>
+              </div>
+              <div className="flex min-w-0 flex-1 flex-wrap gap-1">
+                {folds.map((f) => (
+                  <span key={f.order} className="rounded border border-border bg-muted/40 px-1.5 py-0.5 text-[10px] text-muted-foreground">{f.section}</span>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div className="mt-4"><AvatarGapsNote /></div>
+      <GradientCTA label="Responder as lacunas e refinar · opt-in" />
+    </BlueprintFrame>
+  );
+}
+
+/* ── F5 — Lacunas do avatar (hero) ──────────────────────────────────── */
+function FB5Gaps() {
+  const filled = Object.keys(avatarLabels).filter((k) => !pbAvatarGaps.includes(k));
+  return (
+    <BlueprintFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Avatar · antes da copy final</p>
+      <div className="mt-2 flex items-end gap-2">
+        <span className="gradient-text text-5xl font-bold tracking-tight">{filled.length}/{Object.keys(avatarLabels).length}</span>
+        <span className="mb-1 text-sm text-muted-foreground">campos preenchidos pelo dado</span>
+      </div>
+      <p className="mt-1 text-sm text-muted-foreground">{pbAvatarGaps.length} lacunas seguram a copy de {pbFolds.filter(foldHasGap).length} dobras</p>
+      <div className="mt-5">
+        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-brand">Preenchidos</p>
+        <div className="flex flex-wrap gap-1.5">
+          {filled.map((k) => (
+            <span key={k} className="inline-flex items-center gap-1 rounded-full border border-brand/30 bg-brand/10 px-2 py-0.5 text-[11px] text-brand"><Sparkles className="size-2.5" />{avatarLabels[k]}</span>
+          ))}
+        </div>
+      </div>
+      <div className="mt-4">
+        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-amber-400">Faltam (perguntas abertas)</p>
+        <div className="flex flex-col gap-1.5">
+          {pbAvatarGaps.map((k) => (
+            <div key={k} className="flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/[0.06] px-3 py-2">
+              <AlertTriangle className="size-3.5 shrink-0 text-amber-400" />
+              <span className="text-xs text-foreground">Qual o <span className="font-medium text-amber-400">{avatarLabels[k]}</span> desse público?</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <GradientCTA label="Responder e gerar a copy final · opt-in" />
+    </BlueprintFrame>
+  );
+}
+
+function PageBlueprintResult() {
+  return (
+    <div className="flex flex-col gap-9">
+      <Variation n={1} title="Blueprint (sequência de dobras)"><FB1Blueprint /></Variation>
+      <Variation n={2} title="Wireframe da página"><FB2Wireframe /></Variation>
+      <Variation n={3} title="Tabela de dobras"><FB3Table /></Variation>
+      <Variation n={4} title="Dobra → avatar"><FB4Avatar /></Variation>
+      <Variation n={5} title="Lacunas do avatar (hero)"><FB5Gaps /></Variation>
+    </div>
+  );
+}
+
 /** Registro: id do componente → componente de resultado. */
 export const resultComponents: Record<string, ComponentType> = {
   "card-declined-recovery-list": CardDeclinedRecoveryResult,
@@ -6137,6 +6424,7 @@ export const resultComponents: Record<string, ComponentType> = {
   "weekly-stalled-money-summary": WeeklySummaryResult,
   "custom-field-pattern-discovery": FieldPatternResult,
   "service-inbox-at-risk-monitor": ServiceInboxResult,
+  "furion-page-section-blueprint": PageBlueprintResult,
 };
 
 export function getResultComponent(id: string): ComponentType | undefined {

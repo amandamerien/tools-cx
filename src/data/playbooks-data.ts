@@ -25,6 +25,7 @@ import candidatosUpsellCruzado from "@/content/playbooks/analise/candidatos-a-up
 import resumoSemanalDinheiroOculto from "@/content/playbooks/analise/resumo-semanal-do-dinheiro-oculto.md?raw";
 import descobertaPadroesCampos from "@/content/playbooks/analise/descoberta-de-padroes-de-campos-personalizados.md?raw";
 import monitorCaixaEntrada from "@/content/playbooks/analise/monitor-de-caixa-de-entrada-de-servico-em-risco.md?raw";
+import furionPageSectionBlueprint from "@/content/playbooks/furion/furion-page-section-blueprint.md?raw";
 
 export interface Playbook {
   /** Rótulo do grupo (ex: "Resgate · recuperação de vendas") */
@@ -840,6 +841,49 @@ export const playbooks: Record<string, Playbook> = {
     ],
     body: monitorCaixaEntrada,
     resultId: "service-inbox-at-risk-monitor",
+  },
+  "/furion/paginas-mensagens-e-anuncios/furion-page-section-blueprint": {
+    group: "Páginas, mensagens e anúncios",
+    groupEmoji: "📣",
+    title: "furion-page-section-blueprint",
+    summary:
+      "Use quando o usuário quiser criar UMA página (vendas, captura, upsell, publieditorial, finalização da compra, agradecimento, etc.) dobrando a dobra, com a sequência de seções recomendada e texto baseado em avatar para cada seção.",
+    gatilhos: [
+      "criar uma página de vendas",
+      "montar a página dobra a dobra",
+      "página de captura pro meu produto",
+      "escreve a copy da minha landing page",
+      "preciso de uma página de upsell",
+      "Construa uma página de vendas seção por seção",
+      "Modelo de texto para página de destino",
+      "Escreva o texto para minha página de captura",
+    ],
+    perguntas: [
+      "Cria uma página de vendas pro meu produto, dobra a dobra.",
+      "Monta a página de captura: estrutura + copy de cada seção.",
+      "Escreve a copy da minha landing de upsell baseada no avatar.",
+      "Qual a sequência de dobras ideal pra uma página de vendas?",
+      "Faz o blueprint da página antes de eu aprovar e você montar.",
+    ],
+    ferramentas: [
+      "lista_de_produtos",
+      "produtos_obter",
+      "painel_minhas_vendas",
+      "leads_search",
+      "filtros_de_projetos",
+      "lista_de_páginas",
+      "páginas_criar",
+      "páginas_clonar",
+      "páginas_publicar",
+      "páginas_atualizar_configuração",
+      "páginas_criar_externo",
+      "páginas_obter",
+      "páginas_obter_script_externo",
+      "pergunta",
+      "executar",
+    ],
+    body: furionPageSectionBlueprint,
+    resultId: "furion-page-section-blueprint",
   },
 };
 
