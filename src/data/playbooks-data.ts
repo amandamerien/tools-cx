@@ -18,6 +18,7 @@ import reuniaoFaltadaNaoRemarcada from "@/content/playbooks/analise/reuniao-falt
 import leadsQuentesSemContato from "@/content/playbooks/analise/leads-quentes-sem-contato-recente.md?raw";
 import propostasEnviadasSemAcompanhamento from "@/content/playbooks/analise/propostas-enviadas-sem-acompanhamento.md?raw";
 import ouroLideraAgenda from "@/content/playbooks/analise/ouro-lidera-agenda-de-alto-valor.md?raw";
+import clientesInativosAbrem from "@/content/playbooks/analise/clientes-inativos-ainda-abrem-emails.md?raw";
 
 export interface Playbook {
   /** Rótulo do grupo (ex: "Resgate · recuperação de vendas") */
@@ -589,6 +590,38 @@ export const playbooks: Record<string, Playbook> = {
     ],
     body: ouroLideraAgenda,
     resultId: "gold-leads-high-ticket-agenda",
+  },
+  "/analise/reativacao/clientes-inativos-ainda-abrem-e-mails": {
+    group: "Reativação",
+    groupEmoji: "🔄",
+    agent: "Diego + Vinícius",
+    title: "clientes inativos ainda abrem e-mails",
+    summary:
+      "Utilize quando o usuário solicitar informações sobre clientes antigos que pararam de comprar há mais de 6 meses, mas ainda abrem os e-mails do espaço de trabalho, segmentados por níveis de gastos históricos.",
+    gatilhos: [
+      "pararam de comprar mas abrem meus e-mails",
+      "cliente antigo que ainda lê",
+      "clientes inativos há 6 meses",
+      "reativar clientes antigos",
+      "clientes inativos",
+      "Ainda estou abrindo meus e-mails",
+      "Esforço de reconquista em andamento",
+    ],
+    perguntas: [
+      "Quais clientes pararam de comprar há 6+ meses mas ainda abrem meus e-mails?",
+      "Lista de reativação por tier: quem são meus 'ouro' sumidos que ainda leem?",
+      "Clientes antigos engajados no e-mail — quanto já gastaram comigo?",
+      "Quero reconquistar quem já foi cliente e ainda abre — por valor histórico.",
+      "Quem comprou, sumiu há meses, mas continua abrindo as campanhas?",
+    ],
+    ferramentas: [
+      "painel_minhas_vendas",
+      "lista_de_atividades_do_sistema",
+      "pergunta",
+      "executar",
+    ],
+    body: clientesInativosAbrem,
+    resultId: "lapsed-customers-still-opening",
   },
 };
 

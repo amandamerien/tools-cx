@@ -139,7 +139,7 @@ export const navigation: NavSection[] = [
         emoji: "🔄",
         count: 2,
         children: [
-          { title: "clientes inativos ainda abrindo" },
+          { title: "clientes inativos ainda abrem e-mails" },
           { title: "resfriados por funil" },
         ],
       },

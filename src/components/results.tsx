@@ -4256,6 +4256,257 @@ function GoldLeadsResult() {
   );
 }
 
+/* ════════════════════════════════════════════════════════════════════════
+   lapsed-customers-still-opening — sumiu há 6m, ainda abre e-mail, por tier
+   ════════════════════════════════════════════════════════════════════════ */
+
+type TierKey = "ouro" | "prata" | "bronze";
+
+const tierMeta: Record<TierKey, { label: string; chip: string; dot: string; bar: string }> = {
+  ouro: { label: "Ouro · ≥ R$ 1.500", chip: "border-amber-400/40 bg-amber-400/10 text-amber-300", dot: "bg-amber-300", bar: "bg-amber-400" },
+  prata: { label: "Prata · R$ 500–1.500", chip: "border-zinc-300/30 bg-zinc-300/10 text-zinc-300", dot: "bg-zinc-300", bar: "bg-zinc-400" },
+  bronze: { label: "Bronze · < R$ 500", chip: "border-orange-600/40 bg-orange-600/15 text-orange-400", dot: "bg-orange-600", bar: "bg-orange-600" },
+};
+
+interface LapsedPerson {
+  name: string;
+  ltvCents: number;
+  purchases: number;
+  daysSincePurchase: number;
+  daysSinceOpen: number;
+  product: string;
+}
+interface LapsedTier {
+  key: TierKey;
+  count: number;
+  avgCents: number;
+  people: LapsedPerson[];
+}
+
+const lapsedTiers: LapsedTier[] = [
+  { key: "ouro", count: 23, avgCents: 413700, people: [
+    { name: "Patrícia Gomes", ltvCents: 690000, purchases: 8, daysSincePurchase: 210, daysSinceOpen: 3, product: "Mentoria Pro" },
+    { name: "Ricardo Sá", ltvCents: 413700, purchases: 5, daysSincePurchase: 195, daysSinceOpen: 6, product: "Curso Avançado" },
+  ]},
+  { key: "prata", count: 41, avgCents: 82000, people: [
+    { name: "Camila Reis", ltvCents: 98000, purchases: 3, daysSincePurchase: 230, daysSinceOpen: 5, product: "Workshop ao Vivo" },
+    { name: "Bruno Lima", ltvCents: 67000, purchases: 2, daysSincePurchase: 188, daysSinceOpen: 12, product: "Ebook Bundle" },
+  ]},
+  { key: "bronze", count: 89, avgCents: 21000, people: [
+    { name: "Aline Costa", ltvCents: 29700, purchases: 1, daysSincePurchase: 240, daysSinceOpen: 2, product: "Curso Intro" },
+    { name: "Fábio Nunes", ltvCents: 14700, purchases: 1, daysSincePurchase: 300, daysSinceOpen: 9, product: "Template Pack" },
+  ]},
+];
+
+const lapsedBuyerCount = 207;
+const lapsedTotal = lapsedTiers.reduce((s, t) => s + t.count, 0);
+const lapsedTools = ["painel_minhas_vendas", "lista_de_atividades_do_sistema", "executar"];
+
+function LapsedFrame({ children }: { children: ReactNode }) {
+  return (
+    <ResultFrame orchestration="LAPSED_CUSTOMERS_STILL_OPENING" tag="Vendas" tools={lapsedTools}>
+      {children}
+    </ResultFrame>
+  );
+}
+
+function LapsedPremise() {
+  return (
+    <p className="text-xs italic leading-relaxed text-muted-foreground">
+      “Última compra paga há 180+ dias, mas abriram ao menos um e-mail nos últimos
+      30 dias — por gasto histórico: ouro ≥ R$ 1.500, prata R$ 500–1.500, bronze &lt; R$ 500.”
+    </p>
+  );
+}
+
+/* ── L1 — Por tier (3 seções) ───────────────────────────────────────── */
+function LP1Tiers() {
+  return (
+    <LapsedFrame>
+      <LapsedPremise />
+      <p className="mt-3 text-sm text-foreground">
+        <span className="font-semibold">{lapsedTotal} clientes sumidos</span> ainda abrindo seus e-mails
+      </p>
+      <p className="mt-0.5 text-xs text-muted-foreground">de {lapsedBuyerCount} clientes parados há 6+ meses</p>
+      <div className="mt-5 flex flex-col gap-4">
+        {lapsedTiers.map((t) => (
+          <div key={t.key}>
+            <div className="mb-2 flex items-center gap-2">
+              <span className={cn("size-2 rounded-full", tierMeta[t.key].dot)} />
+              <span className="text-sm font-medium text-foreground">{tierMeta[t.key].label}</span>
+              <span className={cn("rounded-full border px-2 py-0.5 text-[11px] font-medium tabular-nums", tierMeta[t.key].chip)}>{t.count}</span>
+              <span className="ml-auto text-[11px] text-muted-foreground">média {BRL(t.avgCents / 100)}</span>
+            </div>
+            <ul className="flex flex-col gap-px">
+              {t.people.map((p) => (
+                <li key={p.name} className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-accent/50">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">{initials(p.name)}</span>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-medium text-foreground">{p.name}</div>
+                    <div className="truncate text-xs text-muted-foreground">{p.product} · abriu há {p.daysSinceOpen}d · sumiu há {Math.round(p.daysSincePurchase / 30)}m</div>
+                  </div>
+                  <span className="shrink-0 text-sm font-medium tabular-nums text-foreground">{BRL(p.ltvCents / 100)}</span>
+                </li>
+              ))}
+            </ul>
+            {t.count > t.people.length && (
+              <button type="button" className="mt-1 px-2 text-xs font-medium text-brand hover:underline">+ {t.count - t.people.length} {t.key}</button>
+            )}
+          </div>
+        ))}
+      </div>
+      <GradientCTA label="Oferta de reativação por tier · opt-in" />
+    </LapsedFrame>
+  );
+}
+
+/* ── L2 — Cards ─────────────────────────────────────────────────────── */
+function LP2Cards() {
+  const flat = lapsedTiers.flatMap((t) => t.people.map((p) => ({ ...p, t })));
+  return (
+    <LapsedFrame>
+      <div className="flex flex-wrap items-baseline gap-2">
+        <span className="gradient-text text-2xl font-bold">{lapsedTotal}</span>
+        <span className="text-sm text-foreground">clientes pra reconquistar</span>
+        <span className="text-xs text-muted-foreground">· ainda abrem e-mail</span>
+      </div>
+      <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
+        {flat.map((p) => (
+          <div key={p.name} className={cn("rounded-xl border bg-card/40 p-3", p.t.key === "ouro" ? "border-amber-400/30" : "border-border")}>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">{initials(p.name)}</span>
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-medium text-foreground">{p.name}</div>
+                  <div className="truncate text-[11px] text-muted-foreground">{p.purchases} compras · {p.product}</div>
+                </div>
+              </div>
+              <span className={cn("shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-medium capitalize", tierMeta[p.t.key].chip)}>{p.t.key}</span>
+            </div>
+            <div className="mt-2.5 flex items-center justify-between text-xs">
+              <span className="font-medium tabular-nums text-foreground">{BRL(p.ltvCents / 100)}</span>
+              <span className="text-muted-foreground">abriu há {p.daysSinceOpen}d</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      <GradientCTA label="Sequência de reativação · opt-in" />
+    </LapsedFrame>
+  );
+}
+
+/* ── L3 — Distribuição por tier ─────────────────────────────────────── */
+function LP3Dist() {
+  const max = Math.max(...lapsedTiers.map((t) => t.count));
+  return (
+    <LapsedFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Coorte de reativação por tier</p>
+      <div className="mt-2 flex items-end gap-2">
+        <span className="gradient-text text-4xl font-bold tracking-tight">{lapsedTotal}</span>
+        <span className="mb-1 text-sm text-muted-foreground">sumidos que ainda abrem · de {lapsedBuyerCount}</span>
+      </div>
+      <div className="mt-5 flex flex-col gap-4">
+        {lapsedTiers.map((t) => (
+          <div key={t.key}>
+            <div className="mb-1 flex items-center justify-between gap-2 text-sm">
+              <span className="flex items-center gap-2"><span className={cn("size-2 rounded-full", tierMeta[t.key].dot)} /><span className="text-foreground">{tierMeta[t.key].label}</span></span>
+              <span className="text-xs tabular-nums text-muted-foreground">{t.count} · média {BRL(t.avgCents / 100)}</span>
+            </div>
+            <div className="h-3 overflow-hidden rounded-full bg-muted">
+              <div className={cn("h-full rounded-full", tierMeta[t.key].bar)} style={{ width: `${(t.count / max) * 100}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="mt-4 text-xs leading-relaxed text-muted-foreground">Ataque os ouro com oferta personalizada; prata em sequência; bronze em funil de aquecimento.</p>
+      <GradientCTA label="Abrir por tier · opt-in" />
+    </LapsedFrame>
+  );
+}
+
+/* ── L4 — Tabela ────────────────────────────────────────────────────── */
+function LP4Table() {
+  const flat = lapsedTiers.flatMap((t) => t.people.map((p) => ({ ...p, t })));
+  return (
+    <LapsedFrame>
+      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-2">
+        <span className="gradient-text text-2xl font-bold">{lapsedTotal} pra reativar</span>
+        <span className="text-xs text-muted-foreground">de {lapsedBuyerCount} clientes parados</span>
+      </div>
+      <div className="overflow-x-auto rounded-lg border border-border">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
+              <th className="px-3 py-2 font-medium">Cliente</th>
+              <th className="px-3 py-2 font-medium">Tier</th>
+              <th className="px-3 py-2 font-medium">Abriu</th>
+              <th className="px-3 py-2 text-right font-medium">Já gastou</th>
+            </tr>
+          </thead>
+          <tbody>
+            {flat.map((p) => (
+              <tr key={p.name} className={cn("border-b border-border last:border-0 hover:bg-accent/40", p.t.key === "ouro" && "bg-amber-400/[0.04]")}>
+                <td className="px-3 py-2">
+                  <div className="font-medium text-foreground">{p.name}</div>
+                  <div className="text-xs text-muted-foreground">{p.purchases} compras · sumiu há {Math.round(p.daysSincePurchase / 30)}m</div>
+                </td>
+                <td className="px-3 py-2">
+                  <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium capitalize", tierMeta[p.t.key].chip)}>
+                    <span className={cn("size-1.5 rounded-full", tierMeta[p.t.key].dot)} />{p.t.key}
+                  </span>
+                </td>
+                <td className="px-3 py-2 text-xs tabular-nums text-muted-foreground">há {p.daysSinceOpen}d</td>
+                <td className="px-3 py-2 text-right tabular-nums text-foreground">{BRL(p.ltvCents / 100)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <GradientCTA label="Exportar coorte de reativação · opt-in" />
+    </LapsedFrame>
+  );
+}
+
+/* ── L5 — Tier hero ─────────────────────────────────────────────────── */
+function LP5Hero() {
+  const ouro = lapsedTiers[0];
+  return (
+    <LapsedFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Reconquista · clientes ouro sumidos</p>
+      <div className="mt-2 flex items-end gap-2">
+        <span className="gradient-text text-5xl font-bold tracking-tight">{ouro.count}</span>
+        <span className="mb-1 text-sm text-muted-foreground">ouro ainda abrindo · média {BRL(ouro.avgCents / 100)} de ticket</span>
+      </div>
+      <p className="mt-1 text-sm text-muted-foreground">{lapsedTotal} no total pra reativar, de {lapsedBuyerCount} clientes parados há 6+ meses</p>
+      <div className="mt-5 grid grid-cols-3 gap-3">
+        {lapsedTiers.map((t) => (
+          <div key={t.key} className={cn("rounded-xl border bg-card/40 p-3", t.key === "ouro" ? "border-amber-400/30" : "border-border")}>
+            <div className="flex items-center gap-1.5">
+              <span className={cn("size-2 rounded-full", tierMeta[t.key].dot)} />
+              <span className="text-xs font-medium capitalize text-foreground">{t.key}</span>
+            </div>
+            <div className="mt-1.5 text-2xl font-bold tabular-nums text-foreground">{t.count}</div>
+            <div className="mt-0.5 text-[11px] text-muted-foreground">média {BRL(t.avgCents / 100)}</div>
+          </div>
+        ))}
+      </div>
+      <GradientCTA label="Oferta personalizada pros ouro · opt-in" />
+    </LapsedFrame>
+  );
+}
+
+function LapsedCustomersResult() {
+  return (
+    <div className="flex flex-col gap-9">
+      <Variation n={1} title="Por tier (3 níveis)"><LP1Tiers /></Variation>
+      <Variation n={2} title="Cards por cliente"><LP2Cards /></Variation>
+      <Variation n={3} title="Distribuição por tier"><LP3Dist /></Variation>
+      <Variation n={4} title="Tabela"><LP4Table /></Variation>
+      <Variation n={5} title="Tier ouro (hero)"><LP5Hero /></Variation>
+    </div>
+  );
+}
+
 /** Registro: id do componente → componente de resultado. */
 export const resultComponents: Record<string, ComponentType> = {
   "card-declined-recovery-list": CardDeclinedRecoveryResult,
@@ -4274,6 +4525,7 @@ export const resultComponents: Record<string, ComponentType> = {
   "hot-leads-no-recent-contact": HotLeadsResult,
   "proposals-sent-no-follow-up": ProposalsResult,
   "gold-leads-high-ticket-agenda": GoldLeadsResult,
+  "lapsed-customers-still-opening": LapsedCustomersResult,
 };
 
 export function getResultComponent(id: string): ComponentType | undefined {
