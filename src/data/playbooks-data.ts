@@ -15,6 +15,7 @@ import assinantesInativosSemAcesso from "@/content/playbooks/analise/assinantes-
 import assinanteInativoComprou from "@/content/playbooks/analise/assinante-inativo-comprou-uma-unica-vez.md?raw";
 import julgamentoFinalNaoConvertido from "@/content/playbooks/analise/julgamento-final-ainda-nao-convertido.md?raw";
 import reuniaoFaltadaNaoRemarcada from "@/content/playbooks/analise/reuniao-faltada-nao-remarcada.md?raw";
+import leadsQuentesSemContato from "@/content/playbooks/analise/leads-quentes-sem-contato-recente.md?raw";
 
 export interface Playbook {
   /** Rótulo do grupo (ex: "Resgate · recuperação de vendas") */
@@ -483,6 +484,39 @@ export const playbooks: Record<string, Playbook> = {
     ],
     body: reuniaoFaltadaNaoRemarcada,
     resultId: "missed-meeting-not-rescheduled",
+  },
+  "/analise/comercial-agenda-e-pipeline/leads-quentes-sem-contato-recente": {
+    group: "Comercial · agenda e pipeline",
+    groupEmoji: "📞",
+    agent: "Vinícius + Lara",
+    title: "leads quentes sem contato recente",
+    summary:
+      "Utilize esta ferramenta quando o usuário solicitar leads com alta pontuação que estejam sem contato humano por mais de N horas.",
+    gatilhos: [
+      "leads quentes parados",
+      "nota alta sem contato",
+      "lead parado há 48 horas",
+      "ninguém falou com o lead",
+      "leads esfriando",
+      "Pedidos promissores sem contato",
+      "pistas quentes intocadas",
+    ],
+    perguntas: [
+      "Quais leads com nota alta estão parados há mais de 48h sem ninguém falar?",
+      "Qual é o lead mais crítico do dia — nota alta e parado há mais tempo?",
+      "Leads quentes esfriando: quem precisa de contato agora e com qual atendente?",
+      "Tem lead nota 90+ sem contato humano essa semana?",
+      "Ranqueie meus leads parados por urgência (nota × tempo sem contato).",
+    ],
+    ferramentas: [
+      "esquema_de_filtro_de_leads",
+      "leads_search",
+      "lista_de_atividades_por_lead",
+      "pergunta",
+      "executar",
+    ],
+    body: leadsQuentesSemContato,
+    resultId: "hot-leads-no-recent-contact",
   },
 };
 

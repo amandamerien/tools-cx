@@ -129,7 +129,7 @@ export const navigation: NavSection[] = [
         count: 4,
         children: [
           { title: "reunião faltada não remarcada" },
-          { title: "leads quentes sem contato" },
+          { title: "leads quentes sem contato recente" },
           { title: "propostas enviadas sem acompanhamento" },
           { title: "ouro lidera agenda de alto valor" },
         ],

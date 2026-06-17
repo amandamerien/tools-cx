@@ -3478,6 +3478,289 @@ function MissedMeetingResult() {
   );
 }
 
+/* ════════════════════════════════════════════════════════════════════════
+   hot-leads-no-recent-contact — nota alta, parado, ninguém falou
+   ════════════════════════════════════════════════════════════════════════ */
+
+interface HotLead {
+  name: string;
+  email: string;
+  score: number;
+  hours: number;
+  attendant: string;
+  lastCategory: string | null;
+  never: boolean;
+  context?: string;
+}
+
+const hotLeadsRaw: HotLead[] = [
+  { name: "Maria Santos", email: "maria.santos@gmail.com", score: 92, hours: 96, attendant: "Peçanha", lastCategory: "Opportunity", never: false, context: "pediu proposta na última conversa" },
+  { name: "Gustavo Pereira", email: "gustavo.p@outlook.com", score: 72, hours: 100, attendant: "Vinícius", lastCategory: null, never: true },
+  { name: "Rodrigo Lima", email: "rodrigo.lima@gmail.com", score: 78, hours: 90, attendant: "Peçanha", lastCategory: null, never: true },
+  { name: "Carlos Eduardo", email: "carlos.edu@hotmail.com", score: 88, hours: 78, attendant: "Lara", lastCategory: "WhatsApp", never: false },
+  { name: "Patrícia Souza", email: "patricia.souza@gmail.com", score: 81, hours: 80, attendant: "Lara", lastCategory: "Opportunity", never: false },
+  { name: "Fernanda Reis", email: "fernanda.reis@gmail.com", score: 85, hours: 72, attendant: "Vinícius", lastCategory: "WhatsApp", never: false },
+  { name: "Beatriz Nunes", email: "bia.nunes@gmail.com", score: 95, hours: 50, attendant: "Vinícius", lastCategory: "Email", never: false },
+];
+
+const hotLeads = hotLeadsRaw
+  .map((l) => ({ ...l, urgency: l.score * l.hours }))
+  .sort((a, b) => b.urgency - a.urgency);
+const hotCritical = hotLeads[0];
+const hotMaxUrgency = hotCritical.urgency;
+const hotCohortSize = 64;
+const hotResultCount = 23;
+const hotToolsList = ["esquema_de_filtro_de_leads", "leads_search", "lista_de_atividades_por_lead"];
+
+/** Tempo parado → urgência do relógio. 72h+ é vermelho. */
+function idleTone(hours: number) {
+  if (hours >= 72) return "text-red-400";
+  if (hours >= 48) return "text-amber-400";
+  return "text-muted-foreground";
+}
+
+function fmtIdle(hours: number) {
+  return hours >= 48 ? `${Math.round(hours / 24)}d parado` : `${hours}h parado`;
+}
+
+function HotFrame({ children }: { children: ReactNode }) {
+  return (
+    <ResultFrame orchestration="HOT_LEADS_NO_RECENT_CONTACT" tag="Comercial" tools={hotToolsList}>
+      {children}
+    </ResultFrame>
+  );
+}
+
+function HotPremise() {
+  return (
+    <p className="text-xs italic leading-relaxed text-muted-foreground">
+      “Leads com score ≥ 70 cuja última atividade humana (Email/WhatsApp/Opportunity)
+      foi há mais de 48h — ranqueado por nota × tempo parado.”
+    </p>
+  );
+}
+
+/** Cartão de manchete do lead crítico do dia. */
+function CriticalLeadCard() {
+  const c = hotCritical;
+  return (
+    <div className="rounded-2xl border border-red-500/30 bg-gradient-to-br from-red-500/[0.08] to-transparent p-4">
+      <div className="flex items-center gap-2">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-red-500/40 bg-red-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-red-400">
+          <AlertTriangle className="size-3" /> Crítico do dia
+        </span>
+      </div>
+      <div className="mt-3 flex items-center gap-3">
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-medium text-foreground">{initials(c.name)}</span>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <span className="truncate text-base font-semibold text-foreground">{c.name}</span>
+            <span className="shrink-0 rounded-md bg-foreground px-1.5 py-0.5 text-xs font-bold tabular-nums text-background">nota {c.score}</span>
+          </div>
+          <div className="text-xs text-muted-foreground">com {c.attendant} · <span className={idleTone(c.hours)}>{fmtIdle(c.hours)}</span></div>
+        </div>
+      </div>
+      {c.context && <p className="mt-3 text-sm italic leading-relaxed text-foreground/90">“{c.context} — a bola está no nosso campo.”</p>}
+    </div>
+  );
+}
+
+function UrgencyBar({ urgency }: { urgency: number }) {
+  return (
+    <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
+      <div className="h-full rounded-full gradient-brand" style={{ width: `${(urgency / hotMaxUrgency) * 100}%` }} />
+    </div>
+  );
+}
+
+/* ── H1 — Crítico + fila por urgência ───────────────────────────────── */
+function HL1Critical() {
+  const rest = hotLeads.slice(1);
+  return (
+    <HotFrame>
+      <HotPremise />
+      <div className="mt-3"><CriticalLeadCard /></div>
+      <p className="mt-4 mb-2 px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">Próximos na fila · por urgência</p>
+      <ul className="flex flex-col gap-px">
+        {rest.map((l) => (
+          <li key={l.email} className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-accent/50">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">{initials(l.name)}</span>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5">
+                <span className="truncate text-sm font-medium text-foreground">{l.name}</span>
+                {l.never && <span className="shrink-0 rounded-full border border-border bg-muted/60 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">sem contato em 14d</span>}
+              </div>
+              <div className="truncate text-xs text-muted-foreground"><span className={idleTone(l.hours)}>{fmtIdle(l.hours)}</span> · {l.attendant}</div>
+            </div>
+            <span className="shrink-0 rounded-md border border-border px-1.5 py-0.5 text-xs font-semibold tabular-nums text-foreground">{l.score}</span>
+          </li>
+        ))}
+      </ul>
+      <button type="button" className="mt-1 px-2 text-xs font-medium text-brand hover:underline">+ {hotResultCount - hotLeads.length} leads parados</button>
+      <GradientCTA label="Notificar o atendente do crítico · opt-in" />
+    </HotFrame>
+  );
+}
+
+/* ── H2 — Cards ─────────────────────────────────────────────────────── */
+function HL2Cards() {
+  return (
+    <HotFrame>
+      <div className="flex flex-wrap items-baseline gap-2">
+        <span className="gradient-text text-2xl font-bold">{hotResultCount} leads quentes</span>
+        <span className="text-xs text-muted-foreground">parados · de {hotCohortSize} com nota alta</span>
+      </div>
+      <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
+        {hotLeads.map((l, i) => (
+          <div key={l.email} className={cn("rounded-xl border bg-card/40 p-3", i === 0 ? "border-red-500/30" : "border-border")}>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">{initials(l.name)}</span>
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-medium text-foreground">{l.name}</div>
+                  <div className="truncate text-[11px] text-muted-foreground">{l.attendant}</div>
+                </div>
+              </div>
+              <span className="shrink-0 rounded-md bg-foreground px-1.5 py-0.5 text-xs font-bold tabular-nums text-background">{l.score}</span>
+            </div>
+            <div className="mt-2.5 flex items-center justify-between text-xs">
+              <span className={idleTone(l.hours)}>{fmtIdle(l.hours)}</span>
+              <span className="text-muted-foreground">{l.never ? "sem contato em 14d" : `via ${l.lastCategory}`}</span>
+            </div>
+            <div className="mt-2"><UrgencyBar urgency={l.urgency} /></div>
+          </div>
+        ))}
+      </div>
+      <GradientCTA label="Distribuir rediscagem por atendente · opt-in" />
+    </HotFrame>
+  );
+}
+
+/* ── H3 — Matriz nota × tempo parado ────────────────────────────────── */
+function HL3Matrix() {
+  const xMax = 120;
+  return (
+    <HotFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Urgência = nota × tempo parado</p>
+      <p className="mt-1 text-xs text-muted-foreground">Canto superior direito = quente e largado há mais tempo</p>
+      <div className="relative mt-5 ml-7 h-52 border-l border-b border-border">
+        {/* eixos */}
+        <span className="absolute -left-7 top-0 text-[10px] text-muted-foreground">100</span>
+        <span className="absolute -left-7 -bottom-1 text-[10px] text-muted-foreground">70</span>
+        <span className="absolute -bottom-5 left-0 text-[10px] text-muted-foreground">0h</span>
+        <span className="absolute -bottom-5 right-0 text-[10px] text-muted-foreground">{xMax}h+</span>
+        <span className="pointer-events-none absolute right-2 top-2 text-[10px] font-medium text-red-400/70">zona crítica</span>
+        {hotLeads.map((l, i) => {
+          const left = Math.min(98, (l.hours / xMax) * 100);
+          const bottom = Math.min(94, ((l.score - 70) / 30) * 100);
+          const size = i === 0 ? 16 : 11;
+          return (
+            <div key={l.email} className="group absolute -translate-x-1/2 translate-y-1/2" style={{ left: `${left}%`, bottom: `${bottom}%` }}>
+              <span className={cn("block rounded-full ring-2 ring-background", i === 0 ? "bg-red-500 shadow-[0_0_10px] shadow-red-500/50" : l.hours >= 72 ? "bg-amber-500" : "bg-brand")} style={{ width: size, height: size }} />
+              <span className="pointer-events-none absolute left-1/2 top-full mt-1 -translate-x-1/2 whitespace-nowrap rounded bg-popover px-1.5 py-0.5 text-[10px] text-foreground opacity-0 shadow transition-opacity group-hover:opacity-100">{l.name.split(" ")[0]} · {l.score}/{l.hours}h</span>
+            </div>
+          );
+        })}
+      </div>
+      <div className="mt-7 flex items-center gap-3 rounded-xl border border-red-500/30 bg-red-500/[0.06] p-3">
+        <AlertTriangle className="size-4 shrink-0 text-red-400" />
+        <p className="text-xs leading-relaxed text-foreground">
+          <span className="font-semibold">{hotCritical.name}</span> (nota {hotCritical.score}, {fmtIdle(hotCritical.hours)}) é o caso mais crítico — com {hotCritical.attendant}.
+        </p>
+      </div>
+      <GradientCTA label="Atacar a zona crítica primeiro · opt-in" />
+    </HotFrame>
+  );
+}
+
+/* ── H4 — Tabela ────────────────────────────────────────────────────── */
+function HL4Table() {
+  return (
+    <HotFrame>
+      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-2">
+        <span className="gradient-text text-2xl font-bold">{hotResultCount} parados</span>
+        <span className="text-xs text-muted-foreground">checados {hotCohortSize} top por nota</span>
+      </div>
+      <div className="overflow-x-auto rounded-lg border border-border">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
+              <th className="px-3 py-2 font-medium">Lead</th>
+              <th className="px-3 py-2 text-center font-medium">Nota</th>
+              <th className="px-3 py-2 font-medium">Parado</th>
+              <th className="px-3 py-2 font-medium">Atendente</th>
+            </tr>
+          </thead>
+          <tbody>
+            {hotLeads.map((l, i) => (
+              <tr key={l.email} className={cn("border-b border-border last:border-0 hover:bg-accent/40", i === 0 && "bg-red-500/[0.05]")}>
+                <td className="px-3 py-2">
+                  <div className="flex items-center gap-1.5 font-medium text-foreground">
+                    {i === 0 && <AlertTriangle className="size-3 shrink-0 text-red-400" />}
+                    {l.name}
+                  </div>
+                  {l.never && <div className="text-[11px] text-muted-foreground">sem contato em 14d</div>}
+                </td>
+                <td className="px-3 py-2 text-center"><span className="rounded-md border border-border px-1.5 py-0.5 text-xs font-semibold tabular-nums text-foreground">{l.score}</span></td>
+                <td className={cn("px-3 py-2 text-xs tabular-nums", idleTone(l.hours))}>{fmtIdle(l.hours)}</td>
+                <td className="px-3 py-2 text-xs text-muted-foreground">{l.attendant}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <GradientCTA label="Exportar fila de rediscagem · opt-in" />
+    </HotFrame>
+  );
+}
+
+/* ── H5 — Crítico (hero único) ──────────────────────────────────────── */
+function HL5Hero() {
+  const c = hotCritical;
+  return (
+    <HotFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Lead mais crítico agora</p>
+      <div className="mt-3 flex items-center gap-4">
+        <span className="flex size-16 shrink-0 items-center justify-center rounded-full bg-muted text-lg font-semibold text-foreground">{initials(c.name)}</span>
+        <div className="min-w-0">
+          <div className="truncate text-xl font-bold text-foreground">{c.name}</div>
+          <div className="text-sm text-muted-foreground">com {c.attendant}</div>
+        </div>
+      </div>
+      <div className="mt-5 grid grid-cols-3 gap-3">
+        <div className="rounded-xl border border-border bg-card/40 p-3">
+          <div className="gradient-text text-3xl font-bold tabular-nums">{c.score}</div>
+          <div className="mt-0.5 text-[11px] text-muted-foreground">nota de intenção</div>
+        </div>
+        <div className="rounded-xl border border-red-500/30 bg-red-500/[0.06] p-3">
+          <div className="text-3xl font-bold tabular-nums text-red-400">{c.hours}h</div>
+          <div className="mt-0.5 text-[11px] text-muted-foreground">sem contato</div>
+        </div>
+        <div className="rounded-xl border border-border bg-card/40 p-3">
+          <div className="text-3xl font-bold tabular-nums text-foreground">{hotResultCount}</div>
+          <div className="mt-0.5 text-[11px] text-muted-foreground">na fila atrás</div>
+        </div>
+      </div>
+      {c.context && (
+        <p className="mt-4 rounded-xl border border-border bg-muted/30 p-3 text-sm italic leading-relaxed text-foreground/90">“{c.context} — a bola está no nosso campo.”</p>
+      )}
+      <GradientCTA label="Avisar o atendente agora · opt-in" />
+    </HotFrame>
+  );
+}
+
+function HotLeadsResult() {
+  return (
+    <div className="flex flex-col gap-9">
+      <Variation n={1} title="Crítico + fila por urgência"><HL1Critical /></Variation>
+      <Variation n={2} title="Cards por lead"><HL2Cards /></Variation>
+      <Variation n={3} title="Matriz nota × tempo"><HL3Matrix /></Variation>
+      <Variation n={4} title="Tabela"><HL4Table /></Variation>
+      <Variation n={5} title="Crítico (hero único)"><HL5Hero /></Variation>
+    </div>
+  );
+}
+
 /** Registro: id do componente → componente de resultado. */
 export const resultComponents: Record<string, ComponentType> = {
   "card-declined-recovery-list": CardDeclinedRecoveryResult,
@@ -3493,6 +3776,7 @@ export const resultComponents: Record<string, ComponentType> = {
   "win-back-canceled-then-one-time": WinbackResult,
   "expiring-trial-not-converted": ExpiringTrialResult,
   "missed-meeting-not-rescheduled": MissedMeetingResult,
+  "hot-leads-no-recent-contact": HotLeadsResult,
 };
 
 export function getResultComponent(id: string): ComponentType | undefined {
