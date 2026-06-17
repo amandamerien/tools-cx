@@ -106,7 +106,9 @@ export const navigation: NavSection[] = [
         title: "Esteira · subir de ticket",
         emoji: "🎯",
         count: 4,
-        children: [], // recolhido no print — itens pendentes
+        children: [
+          { title: "prontidão para vendas adicionais de baixo custo" },
+        ],
       },
       {
         title: "Retenção",

@@ -7,6 +7,7 @@ import boletoPendentePixPorDia from "@/content/playbooks/analise/boleto-pendente
 import abandonoCarrinhoPorProduto from "@/content/playbooks/analise/abandono-de-carrinho-por-produto.md?raw";
 import compraCanceladaNaoDevolvida from "@/content/playbooks/analise/compra-cancelada-nao-devolvida.md?raw";
 import renovacaoAssinaturaFalhada from "@/content/playbooks/analise/renovacao-da-assinatura-falhada.md?raw";
+import prontidaoVendasAdicionais from "@/content/playbooks/analise/prontidao-vendas-adicionais-baixo-custo.md?raw";
 
 export interface Playbook {
   /** Rótulo do grupo (ex: "Resgate · recuperação de vendas") */
@@ -195,6 +196,42 @@ export const playbooks: Record<string, Playbook> = {
     ],
     body: renovacaoAssinaturaFalhada,
     resultId: "subscription-renewal-failed",
+  },
+
+  "/analise/esteira-subir-de-ticket/prontidao-para-vendas-adicionais-de-baixo-custo": {
+    group: "Esteira · subir de ticket",
+    groupEmoji: "🎯",
+    agent: "Cassio + Diego",
+    title: "prontidão para vendas adicionais de baixo custo",
+    summary:
+      "Use esta pergunta quando o usuário perguntar quais compradores recentes de baixo valor demonstram sinais de engajamento (conclusão de curso, abertura de e-mails, atividade recente, cliques em ofertas) que os tornam aptos para uma oferta de alto valor.",
+    gatilhos: [
+      "comprou meu produto barato",
+      "pronto pra subir pra Mentoria",
+      "quem está pronto pra comprar algo maior",
+      "sinais de prontidão",
+      "terminou o curso e abre meus e-mails",
+      "Pronto para atualizar",
+      "Preparação para vendas adicionais",
+      "engajaram compradores de baixo valor",
+    ],
+    perguntas: [
+      "Quem comprou meu produto barato e tá pronto pra subir pra Mentoria?",
+      "Quais compradores de baixo valor engajaram e estão prontos pra uma oferta maior?",
+      "Me mostra quem terminou o curso e abre meus e-mails — pra eu oferecer o ticket alto.",
+      "Lista de quem comprou o Workshop e tem sinais de prontidão pra Mentoria.",
+      "Quem dos compradores recentes está mais quente pra um upsell de alto valor?",
+    ],
+    ferramentas: [
+      "painel_minhas_vendas",
+      "lista_de_produtos",
+      "member_users_get_progress_by_lead",
+      "metricas_de_atividades_por_lead",
+      "pergunta",
+      "executar",
+    ],
+    body: prontidaoVendasAdicionais,
+    resultId: "low-cost-buyer-readiness",
   },
 };
 

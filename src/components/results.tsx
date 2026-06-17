@@ -1479,6 +1479,255 @@ function SubscriptionRenewalResult() {
   );
 }
 
+/* ════════════════════════════════════════════════════════════════════════
+   low-cost-buyer-readiness — ranking de prontidão por 4 sinais de engajamento
+   ════════════════════════════════════════════════════════════════════════ */
+
+interface ReadyPerson {
+  name: string;
+  email: string;
+  score: number;
+  spent: number;
+  purchases: number;
+  signals: string[];
+}
+
+const readyPeople: ReadyPerson[] = [
+  { name: "Marina Alves", email: "marina.alves@gmail.com", score: 0.94, spent: 197, purchases: 2, signals: ["curso 100%", "abre e-mails", "clicou em oferta", "ativo recentemente"] },
+  { name: "Diego Martins", email: "diego.m@outlook.com", score: 0.88, spent: 297, purchases: 1, signals: ["curso 80%+", "abre e-mails", "ativo recentemente"] },
+  { name: "Beatriz Lima", email: "bia.lima@gmail.com", score: 0.81, spent: 97, purchases: 3, signals: ["curso 100%", "abre e-mails", "ativo recentemente"] },
+  { name: "Rafael Souza", email: "rafael.souza@hotmail.com", score: 0.76, spent: 497, purchases: 1, signals: ["curso 80%+", "clicou em oferta", "ativo recentemente"] },
+  { name: "Camila Rocha", email: "camila.rocha@gmail.com", score: 0.69, spent: 197, purchases: 2, signals: ["abre e-mails", "clicou em oferta", "ativo recentemente"] },
+  { name: "Lucas Pereira", email: "lucas.pereira@gmail.com", score: 0.62, spent: 197, purchases: 1, signals: ["curso 80%+", "abre e-mails"] },
+];
+
+const readyStats = { cohortSize: 73, excludedAlreadyTarget: 12, resultCount: 30, withoutLeadId: 4 };
+const readyFormula = "0.35 curso · 0.25 aberturas · 0.2 cliques · 0.2 recência";
+const readyTools = ["painel_minhas_vendas", "lista_de_produtos", "member_users_get_progress_by_lead", "executar"];
+
+function signalChipClass(s: string) {
+  if (s.includes("curso")) return "border-emerald-500/30 bg-emerald-500/10 text-emerald-400";
+  if (s.includes("e-mail")) return "border-sky-500/30 bg-sky-500/10 text-sky-400";
+  if (s.includes("oferta")) return "border-violet-500/30 bg-violet-500/10 text-violet-400";
+  if (s.includes("ativo")) return "border-amber-500/30 bg-amber-500/10 text-amber-400";
+  return "border-border bg-muted/60 text-muted-foreground";
+}
+function scoreClass(score: number) {
+  if (score >= 0.8) return "text-brand";
+  if (score >= 0.6) return "text-amber-400";
+  return "text-muted-foreground";
+}
+function Signals({ signals }: { signals: string[] }) {
+  return (
+    <div className="flex flex-wrap gap-1">
+      {signals.map((s) => (
+        <span key={s} className={cn("rounded-full border px-1.5 py-0.5 text-[10px] font-medium", signalChipClass(s))}>
+          {s}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function ReadyFrame({ children }: { children: ReactNode }) {
+  return (
+    <ResultFrame orchestration="LOW_COST_BUYER_READINESS" tools={readyTools}>
+      {children}
+    </ResultFrame>
+  );
+}
+
+function ReadyHead() {
+  return (
+    <>
+      <p className="text-xs italic leading-relaxed text-muted-foreground">
+        “Compradores do produto de entrada nos últimos 90 dias que ainda não
+        compraram o alvo, ranqueados por 4 sinais de prontidão.”
+      </p>
+      <p className="mt-2 inline-flex flex-wrap items-center gap-1.5 rounded-md border border-border bg-muted/40 px-2 py-1 font-mono text-[10px] text-muted-foreground">
+        readiness = {readyFormula}
+      </p>
+    </>
+  );
+}
+
+/* ── R1 — Ranking de prontidão ──────────────────────────────────────── */
+function RV1Ranking() {
+  return (
+    <ReadyFrame>
+      <ReadyHead />
+      <div className="mt-3 flex flex-wrap items-end gap-x-2 gap-y-1">
+        <span className="gradient-text text-4xl font-bold tracking-tight">30</span>
+        <span className="mb-1 text-base font-medium text-foreground">prontos · de {readyStats.cohortSize} compradores</span>
+      </div>
+      <p className="mt-1 text-xs text-muted-foreground">{readyStats.excludedAlreadyTarget} já têm o alvo (fora) · {readyStats.withoutLeadId} sem leadId (não enriquecidos)</p>
+      <ul className="mt-4 flex flex-col gap-2">
+        {readyPeople.map((p, i) => (
+          <li key={p.email} className="flex items-center gap-3 rounded-lg border border-border bg-card/40 p-2.5">
+            <span className="w-5 shrink-0 text-center font-mono text-xs text-muted-foreground">{i + 1}</span>
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">{initials(p.name)}</span>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <span className="truncate text-sm font-medium text-foreground">{p.name}</span>
+                <span className={cn("font-mono text-xs font-semibold", scoreClass(p.score))}>{p.score.toFixed(2)}</span>
+              </div>
+              <div className="mt-1"><Signals signals={p.signals} /></div>
+            </div>
+            <span className="shrink-0 text-right text-xs text-muted-foreground">{p.purchases}× · {BRL(p.spent)}</span>
+          </li>
+        ))}
+      </ul>
+      <button type="button" className="mt-1 px-2 text-sm font-medium text-brand hover:underline">+ 24 pessoas</button>
+      <GradientCTA label="Criar campanha entrada → alvo · opt-in" />
+    </ReadyFrame>
+  );
+}
+
+/* ── R2 — Score + sinais (cards) ────────────────────────────────────── */
+function RV2Cards() {
+  return (
+    <ReadyFrame>
+      <ReadyHead />
+      <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
+        {readyPeople.map((p) => (
+          <div key={p.email} className="rounded-xl border border-border bg-card/40 p-3">
+            <div className="flex items-center justify-between">
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">{initials(p.name)}</span>
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-medium text-foreground">{p.name}</div>
+                  <div className="text-[11px] text-muted-foreground">{p.purchases}× · {BRL(p.spent)}</div>
+                </div>
+              </div>
+              <span className={cn("font-mono text-lg font-bold", scoreClass(p.score))}>{p.score.toFixed(2)}</span>
+            </div>
+            <div className="mt-2.5"><Signals signals={p.signals} /></div>
+          </div>
+        ))}
+      </div>
+      <GradientCTA label="Taggear os prontos · opt-in" />
+    </ReadyFrame>
+  );
+}
+
+/* ── R3 — Termômetro (barras) ───────────────────────────────────────── */
+function RV3Thermo() {
+  return (
+    <ReadyFrame>
+      <ReadyHead />
+      <div className="mt-4 flex flex-col gap-4">
+        {readyPeople.map((p) => (
+          <div key={p.email}>
+            <div className="mb-1.5 flex items-center justify-between gap-2 text-sm">
+              <span className="truncate font-medium text-foreground">{p.name}</span>
+              <span className={cn("shrink-0 font-mono text-xs font-semibold", scoreClass(p.score))}>{Math.round(p.score * 100)}%</span>
+            </div>
+            <div className="h-2.5 overflow-hidden rounded-full bg-muted">
+              <div className="gradient-brand h-full rounded-full" style={{ width: `${p.score * 100}%` }} />
+            </div>
+            <div className="mt-1.5"><Signals signals={p.signals} /></div>
+          </div>
+        ))}
+      </div>
+      <GradientCTA label="Convidar top 30 pro webinar · opt-in" />
+    </ReadyFrame>
+  );
+}
+
+/* ── R4 — Tabela ────────────────────────────────────────────────────── */
+const SIGNAL_COLS = [
+  { key: "curso", label: "Curso" },
+  { key: "e-mail", label: "E-mail" },
+  { key: "oferta", label: "Oferta" },
+  { key: "ativo", label: "Ativo" },
+];
+function RV4Table() {
+  return (
+    <ReadyFrame>
+      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-2">
+        <span className="gradient-text text-2xl font-bold">30 prontos</span>
+        <span className="text-xs text-muted-foreground">de {readyStats.cohortSize} · {readyStats.excludedAlreadyTarget} já têm o alvo</span>
+      </div>
+      <div className="overflow-x-auto rounded-lg border border-border">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
+              <th className="px-3 py-2 text-left font-medium">Pessoa</th>
+              {SIGNAL_COLS.map((c) => <th key={c.key} className="px-2 py-2 text-center font-medium">{c.label}</th>)}
+              <th className="px-3 py-2 text-right font-medium">Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            {readyPeople.map((p) => (
+              <tr key={p.email} className="border-b border-border last:border-0 hover:bg-accent/40">
+                <td className="px-3 py-2">
+                  <div className="font-medium text-foreground">{p.name}</div>
+                  <div className="text-xs text-muted-foreground">{p.purchases}× · {BRL(p.spent)}</div>
+                </td>
+                {SIGNAL_COLS.map((c) => (
+                  <td key={c.key} className="px-2 py-2 text-center">
+                    {p.signals.some((s) => s.includes(c.key))
+                      ? <span className="text-brand">●</span>
+                      : <span className="text-border">–</span>}
+                  </td>
+                ))}
+                <td className={cn("px-3 py-2 text-right font-mono text-xs font-semibold", scoreClass(p.score))}>{p.score.toFixed(2)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <GradientCTA label="Exportar prontos · opt-in" />
+    </ReadyFrame>
+  );
+}
+
+/* ── R5 — Funil + cenário de receita ────────────────────────────────── */
+function RV5Funnel() {
+  const steps = [
+    { label: "Compradores de entrada (90d)", value: 73, pct: 100 },
+    { label: "Ainda sem o alvo", value: 61, pct: 84 },
+    { label: "Enriquecidos (top 50)", value: 50, pct: 68 },
+    { label: "Prontos (top 30)", value: 30, pct: 41 },
+  ];
+  return (
+    <ReadyFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+        Funil de prontidão · entrada → alvo
+      </p>
+      <div className="mt-4 flex flex-col gap-3">
+        {steps.map((s) => (
+          <div key={s.label}>
+            <div className="mb-1.5 flex items-center justify-between text-sm">
+              <span className="font-medium text-foreground">{s.label}</span>
+              <span className="tabular-nums text-muted-foreground">{s.value} · {s.pct}%</span>
+            </div>
+            <div className="h-2.5 overflow-hidden rounded-full bg-muted">
+              <div className="gradient-brand h-full rounded-full" style={{ width: `${s.pct}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-4 rounded-lg border border-border bg-card/40 p-3 text-xs leading-relaxed text-muted-foreground">
+        Cenário (não promessa): <span className="text-foreground">30 prontos × preço do alvo × taxa que você validar</span>. Conversão histórica do seu workspace, nunca a ilustrativa.
+      </div>
+      <GradientCTA label="Marcar 1:1 com os top 3 · opt-in" />
+    </ReadyFrame>
+  );
+}
+
+function LowCostBuyerReadinessResult() {
+  return (
+    <div className="flex flex-col gap-9">
+      <Variation n={1} title="Ranking de prontidão"><RV1Ranking /></Variation>
+      <Variation n={2} title="Score + sinais (cards)"><RV2Cards /></Variation>
+      <Variation n={3} title="Termômetro (barras)"><RV3Thermo /></Variation>
+      <Variation n={4} title="Tabela de sinais"><RV4Table /></Variation>
+      <Variation n={5} title="Funil + cenário"><RV5Funnel /></Variation>
+    </div>
+  );
+}
+
 /** Registro: id do componente → componente de resultado. */
 export const resultComponents: Record<string, ComponentType> = {
   "card-declined-recovery-list": CardDeclinedRecoveryResult,
@@ -1486,6 +1735,7 @@ export const resultComponents: Record<string, ComponentType> = {
   "checkout-abandonment-by-product": CheckoutAbandonmentResult,
   "canceled-purchase-not-returned": CanceledPurchaseResult,
   "subscription-renewal-failed": SubscriptionRenewalResult,
+  "low-cost-buyer-readiness": LowCostBuyerReadinessResult,
 };
 
 export function getResultComponent(id: string): ComponentType | undefined {
