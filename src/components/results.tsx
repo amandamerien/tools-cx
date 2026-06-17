@@ -1,5 +1,5 @@
 import { Fragment, type ComponentType, type ReactNode } from "react";
-import { ArrowRight, AlertTriangle, GraduationCap } from "lucide-react";
+import { ArrowRight, AlertTriangle, GraduationCap, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
@@ -2193,6 +2193,504 @@ function TicketBandUpsellResult() {
   );
 }
 
+/* ════════════════════════════════════════════════════════════════════════
+   high-value-one-time-non-subscribers — premium avulso, janela ideal 90-120d
+   ════════════════════════════════════════════════════════════════════════ */
+
+interface HVBuyer {
+  name: string;
+  email: string;
+  value: number;
+  product: string;
+  days: number;
+  inWindow: boolean;
+}
+
+const hvBuyers: HVBuyer[] = [
+  { name: "Carlos Bauer", email: "carlos@agencia.com.br", value: 8997, product: "Imersão Presencial", days: 102, inWindow: true },
+  { name: "Patrícia Gomes", email: "paty@consultoria.com", value: 7497, product: "Programa Black", days: 108, inWindow: true },
+  { name: "Ana Lima", email: "ana@criativa.co", value: 5997, product: "Mentoria Anual", days: 95, inWindow: true },
+  { name: "Diego Martins", email: "diego.m@outlook.com", value: 12997, product: "Imersão Presencial", days: 45, inWindow: false },
+  { name: "Rafael Souza", email: "rafael@studio.com", value: 6497, product: "Programa Black", days: 210, inWindow: false },
+  { name: "Marina Alves", email: "marina.alves@gmail.com", value: 5497, product: "Mentoria Anual", days: 320, inWindow: false },
+];
+
+const hvTools = ["painel_minhas_vendas", "lista_de_assinaturas", "executar"];
+
+function HVFrame({ children }: { children: ReactNode }) {
+  return (
+    <ResultFrame orchestration="HIGH_VALUE_ONE_TIME_NON_SUBSCRIBERS" tag="Vendas" tools={hvTools}>
+      {children}
+    </ResultFrame>
+  );
+}
+
+function HVPremise() {
+  return (
+    <p className="text-xs italic leading-relaxed text-muted-foreground">
+      “Compradores com compra avulsa (OneTime) ≥ {BRL(5000)}, sem assinatura
+      ativa — priorizados pela janela ideal de 90-120 dias.”
+    </p>
+  );
+}
+
+function WindowBadge({ inWindow }: { inWindow: boolean }) {
+  return inWindow ? (
+    <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-400">janela ideal</span>
+  ) : (
+    <span className="rounded-full border border-border bg-muted/60 px-2 py-0.5 text-[11px] text-muted-foreground">na fila</span>
+  );
+}
+
+/* ── H1 — Lista priorizada ──────────────────────────────────────────── */
+function HV1List() {
+  return (
+    <HVFrame>
+      <HVPremise />
+      <div className="mt-3 flex flex-wrap items-end gap-x-2 gap-y-1">
+        <span className="gradient-text text-4xl font-bold tracking-tight">34</span>
+        <span className="mb-1 text-base font-medium text-foreground">clientes premium · sem assinatura</span>
+      </div>
+      <div className="mt-4">
+        <AlertIndicatorBox tone="brand" title="5 estão na janela ideal AGORA (90-120 dias)">
+          O grupo do 1:1 imediato — momento de pensar "preciso da próxima estrutura". Os demais continuam alvo, só descem na fila.
+        </AlertIndicatorBox>
+      </div>
+      <ul className="mt-4 flex flex-col gap-px">
+        {hvBuyers.slice(0, 5).map((b) => (
+          <li key={b.email} className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-accent/50">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">{initials(b.name)}</span>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <span className="truncate text-sm font-medium text-foreground">{b.name}</span>
+                <WindowBadge inWindow={b.inWindow} />
+              </div>
+              <div className="truncate text-xs text-muted-foreground">{b.email} · {b.product}</div>
+            </div>
+            <div className="shrink-0 text-right">
+              <div className="text-sm font-medium tabular-nums text-foreground">{BRL(b.value)}</div>
+              <div className="text-xs text-muted-foreground">há {b.days} dias</div>
+            </div>
+          </li>
+        ))}
+      </ul>
+      <button type="button" className="mt-1 px-2 text-sm font-medium text-brand hover:underline">+ 29 clientes</button>
+      <GradientCTA label="Abrir cards 1:1 com vendedor sênior · opt-in" />
+    </HVFrame>
+  );
+}
+
+/** Callout interno reaproveitável (mesmo estilo do AlertIndicator). */
+function AlertIndicatorBox({ tone, title, children }: { tone: "brand" | "critical"; title: string; children: ReactNode }) {
+  const cls = tone === "brand" ? "border-brand/30 bg-brand-muted text-brand" : "border-red-500/30 bg-red-500/10 text-red-400";
+  return (
+    <div className={cn("rounded-lg border p-3.5", cls.split(" ").slice(0, 2).join(" "))}>
+      <div className={cn("flex items-center gap-2 text-sm font-semibold", cls.split(" ")[2])}>
+        <Sparkles className="size-4 shrink-0" />
+        {title}
+      </div>
+      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{children}</p>
+    </div>
+  );
+}
+
+/* ── H2 — Cards por pessoa ──────────────────────────────────────────── */
+function HV2Cards() {
+  return (
+    <HVFrame>
+      <div className="flex flex-wrap items-baseline gap-2">
+        <span className="gradient-text text-2xl font-bold">34 clientes premium</span>
+        <span className="text-xs text-muted-foreground">5 na janela ideal</span>
+      </div>
+      <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
+        {hvBuyers.map((b) => (
+          <div key={b.email} className={cn("rounded-xl border bg-card/40 p-3", b.inWindow ? "border-emerald-500/30" : "border-border")}>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">{initials(b.name)}</span>
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-medium text-foreground">{b.name}</div>
+                  <div className="truncate text-[11px] text-muted-foreground">{b.product}</div>
+                </div>
+              </div>
+              <WindowBadge inWindow={b.inWindow} />
+            </div>
+            <div className="mt-2.5 flex items-center justify-between">
+              <span className="text-sm font-medium tabular-nums text-foreground">{BRL(b.value)}</span>
+              <span className="text-xs text-muted-foreground">há {b.days} dias</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      <GradientCTA label="Criar tarefas 1:1 · opt-in" />
+    </HVFrame>
+  );
+}
+
+/* ── H3 — Janela ideal (hero) ───────────────────────────────────────── */
+function HV3Window() {
+  const win = hvBuyers.filter((b) => b.inWindow);
+  return (
+    <HVFrame>
+      <AlertIndicatorBox tone="brand" title="5 clientes na janela ideal AGORA">
+        Compraram alto há 90-120 dias e não assinam nada — o momento exato do 1:1 pra estruturar a recorrência.
+      </AlertIndicatorBox>
+      <ul className="mt-4 flex flex-col gap-2">
+        {win.map((b) => (
+          <li key={b.email} className="flex items-center gap-3 rounded-lg border border-emerald-500/30 bg-emerald-500/[0.06] p-3">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">{initials(b.name)}</span>
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm font-medium text-foreground">{b.name}</div>
+              <div className="truncate text-xs text-muted-foreground">{b.email} · {b.product} · há {b.days} dias</div>
+            </div>
+            <span className="shrink-0 text-sm font-medium tabular-nums text-emerald-400">{BRL(b.value)}</span>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-3 text-xs text-muted-foreground">↳ + 29 clientes premium fora da janela continuam alvo, em fila.</p>
+      <GradientCTA label="Abrir os 5 cards 1:1 · opt-in" />
+    </HVFrame>
+  );
+}
+
+/* ── H4 — Tabela ────────────────────────────────────────────────────── */
+function HV4Table() {
+  return (
+    <HVFrame>
+      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-2">
+        <span className="gradient-text text-2xl font-bold">34 clientes</span>
+        <span className="text-xs text-muted-foreground">71 compras de alto valor · 23 já assinam</span>
+      </div>
+      <div className="overflow-x-auto rounded-lg border border-border">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
+              <th className="px-3 py-2 font-medium">Cliente</th>
+              <th className="px-3 py-2 text-right font-medium">Valor</th>
+              <th className="px-3 py-2 text-right font-medium">Há</th>
+              <th className="px-3 py-2 font-medium">Janela</th>
+            </tr>
+          </thead>
+          <tbody>
+            {hvBuyers.map((b) => (
+              <tr key={b.email} className={cn("border-b border-border last:border-0 hover:bg-accent/40", b.inWindow && "bg-emerald-500/[0.04]")}>
+                <td className="px-3 py-2">
+                  <div className="font-medium text-foreground">{b.name}</div>
+                  <div className="text-xs text-muted-foreground">{b.product}</div>
+                </td>
+                <td className="px-3 py-2 text-right tabular-nums text-foreground">{BRL(b.value)}</td>
+                <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">{b.days}d</td>
+                <td className="px-3 py-2"><WindowBadge inWindow={b.inWindow} /></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <GradientCTA label="Exportar premium · opt-in" />
+    </HVFrame>
+  );
+}
+
+/* ── H5 — Métrica + funil ───────────────────────────────────────────── */
+function HV5Funnel() {
+  const steps = [
+    { label: "Compras de alto valor (OneTime)", value: 71, pct: 100 },
+    { label: "Já assinam (saem)", value: 23, pct: 32 },
+    { label: "Clientes premium sem assinatura", value: 34, pct: 48 },
+    { label: "Na janela ideal (90-120d)", value: 5, pct: 7, hi: true },
+  ];
+  return (
+    <HVFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Funil premium · compra avulsa ≥ {BRL(5000)}</p>
+      <div className="mt-4 flex flex-col gap-3">
+        {steps.map((s) => (
+          <div key={s.label}>
+            <div className="mb-1.5 flex items-center justify-between text-sm">
+              <span className={cn("font-medium", s.hi ? "text-emerald-400" : "text-foreground")}>{s.label}</span>
+              <span className="tabular-nums text-muted-foreground">{s.value} · {s.pct}%</span>
+            </div>
+            <div className="h-2.5 overflow-hidden rounded-full bg-muted">
+              <div className={cn("h-full rounded-full", s.hi ? "bg-gradient-to-r from-emerald-400 to-emerald-300" : "gradient-brand")} style={{ width: `${s.pct}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="mt-4 text-xs text-muted-foreground">↳ cenário (não promessa): 5 na janela × ticket de recorrência × taxa que você validar.</p>
+      <GradientCTA label="Ver os 34 clientes premium" />
+    </HVFrame>
+  );
+}
+
+function HighValueOneTimeResult() {
+  return (
+    <div className="flex flex-col gap-9">
+      <Variation n={1} title="Lista priorizada"><HV1List /></Variation>
+      <Variation n={2} title="Cards por pessoa"><HV2Cards /></Variation>
+      <Variation n={3} title="Janela ideal (hero)"><HV3Window /></Variation>
+      <Variation n={4} title="Tabela"><HV4Table /></Variation>
+      <Variation n={5} title="Funil premium"><HV5Funnel /></Variation>
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   inactive-subscribers-no-member-access — churn antecipado por gravidade + MRR
+   ════════════════════════════════════════════════════════════════════════ */
+
+const sevMeta: Record<string, { chip: string; bar: string; dist: string }> = {
+  critical: { chip: "border-red-500/30 bg-red-500/10 text-red-400", bar: "from-red-500 to-red-400", dist: "bg-red-500" },
+  warning: { chip: "border-amber-500/30 bg-amber-500/10 text-amber-400", bar: "from-amber-400 to-amber-300", dist: "bg-amber-500" },
+  never: { chip: "border-border bg-muted/60 text-muted-foreground", bar: "from-zinc-500 to-zinc-400", dist: "bg-zinc-500" },
+};
+
+interface InactivePerson {
+  name: string;
+  email: string;
+  plan: string;
+  mrr: number;
+  meta: string;
+}
+interface SevSection {
+  key: keyof typeof sevMeta;
+  label: string;
+  count: number;
+  people: InactivePerson[];
+}
+
+const inactiveSections: SevSection[] = [
+  { key: "critical", label: "Críticos · 30+ dias sem login", count: 8, people: [
+    { name: "Marina Alves", email: "marina.alves@gmail.com", plan: "Clube Pro", mrr: 97, meta: "sem login há 47d" },
+    { name: "Diego Martins", email: "diego.m@outlook.com", plan: "Mentoria Anual", mrr: 197, meta: "sem login há 38d" },
+  ]},
+  { key: "warning", label: "Em alerta · 15–30 dias", count: 26, people: [
+    { name: "Rafael Souza", email: "rafael.souza@hotmail.com", plan: "Clube Pro", mrr: 97, meta: "sem login há 22d" },
+    { name: "Camila Rocha", email: "camila.rocha@gmail.com", plan: "Plano Premium", mrr: 197, meta: "sem login há 18d" },
+  ]},
+  { key: "never", label: "Nunca acessaram", count: 5, people: [
+    { name: "Beatriz Lima", email: "bia.lima@gmail.com", plan: "Clube Pro", mrr: 97, meta: "assinou há 60d · nunca entrou" },
+    { name: "André Luiz", email: "andre.luiz@hotmail.com", plan: "Mentoria Anual", mrr: 197, meta: "assinou há 90d · nunca entrou" },
+  ]},
+];
+
+const inactiveMrr = 10098;
+const inactiveTotal = inactiveSections.reduce((s, x) => s + x.count, 0);
+const inactiveTools = ["lista_de_assinaturas", "lista_de_usuarios_membros", "executar"];
+
+function InactiveFrame({ children }: { children: ReactNode }) {
+  return (
+    <ResultFrame orchestration="INACTIVE_SUBSCRIBERS_NO_MEMBER_ACCESS" tag="Membros" tools={inactiveTools}>
+      {children}
+    </ResultFrame>
+  );
+}
+
+function InactivePremise() {
+  return (
+    <p className="text-xs italic leading-relaxed text-muted-foreground">
+      “Assinantes ativos sem login na área de membros há 14+ dias — receita
+      recorrente em risco, dividida por gravidade.”
+    </p>
+  );
+}
+
+function SevChip({ s }: { s: SevSection }) {
+  return (
+    <span className={cn("rounded-full border px-2 py-0.5 text-[11px] font-medium", sevMeta[s.key].chip)}>
+      {s.count}
+    </span>
+  );
+}
+
+/* ── I1 — Por gravidade (3 seções) ──────────────────────────────────── */
+function IN1Severity() {
+  return (
+    <InactiveFrame>
+      <InactivePremise />
+      <div className="mt-3 flex flex-wrap items-end gap-x-2 gap-y-1">
+        <span className="gradient-text text-4xl font-bold tracking-tight">{BRL(inactiveMrr)}</span>
+        <span className="mb-1 text-base font-medium text-foreground">/mês em risco</span>
+      </div>
+      <p className="mt-1 text-xs text-muted-foreground">39 assinantes parados · 142 ativos no total · 8 críticos cancelam no próximo ciclo</p>
+      <div className="mt-5 flex flex-col gap-4">
+        {inactiveSections.map((s) => (
+          <div key={s.key}>
+            <div className="mb-2 flex items-center gap-2">
+              <span className={cn("size-2 rounded-full", sevMeta[s.key].dist)} />
+              <span className="text-sm font-medium text-foreground">{s.label}</span>
+              <SevChip s={s} />
+            </div>
+            <ul className="flex flex-col gap-px">
+              {s.people.map((p) => (
+                <li key={p.email} className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-accent/50">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">{initials(p.name)}</span>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-medium text-foreground">{p.name}</div>
+                    <div className="truncate text-xs text-muted-foreground">{p.plan} · {p.meta}</div>
+                  </div>
+                  <span className="shrink-0 text-sm font-medium tabular-nums text-foreground">{BRL(p.mrr)}/mês</span>
+                </li>
+              ))}
+            </ul>
+            {s.count > s.people.length && (
+              <button type="button" className="mt-1 px-2 text-xs font-medium text-brand hover:underline">+ {s.count - s.people.length} em {s.label.split(" ·")[0].toLowerCase()}</button>
+            )}
+          </div>
+        ))}
+      </div>
+      <GradientCTA label="Abrir tarefas de CS pros críticos · opt-in" />
+    </InactiveFrame>
+  );
+}
+
+/* ── I2 — Cards por pessoa ──────────────────────────────────────────── */
+function IN2Cards() {
+  const flat = inactiveSections.flatMap((s) => s.people.map((p) => ({ ...p, s })));
+  return (
+    <InactiveFrame>
+      <div className="flex flex-wrap items-baseline gap-2">
+        <span className="gradient-text text-2xl font-bold">{BRL(inactiveMrr)}/mês</span>
+        <span className="text-xs text-muted-foreground">em risco · 39 assinantes parados</span>
+      </div>
+      <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
+        {flat.map((p) => (
+          <div key={p.email} className={cn("rounded-xl border bg-card/40 p-3", p.s.key === "critical" ? "border-red-500/30" : "border-border")}>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">{initials(p.name)}</span>
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-medium text-foreground">{p.name}</div>
+                  <div className="truncate text-[11px] text-muted-foreground">{p.plan}</div>
+                </div>
+              </div>
+              <span className={cn("shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-medium", sevMeta[p.s.key].chip)}>{p.s.key === "critical" ? "crítico" : p.s.key === "warning" ? "alerta" : "nunca"}</span>
+            </div>
+            <div className="mt-2.5 flex items-center justify-between">
+              <span className="text-sm font-medium tabular-nums text-foreground">{BRL(p.mrr)}/mês</span>
+              <span className="text-xs text-muted-foreground">{p.meta}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      <GradientCTA label="Fluxo de re-engajamento · opt-in" />
+    </InactiveFrame>
+  );
+}
+
+/* ── I3 — Distribuição (severidade) ─────────────────────────────────── */
+function IN3Dist() {
+  return (
+    <InactiveFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Assinantes parados por gravidade</p>
+      <div className="mt-2 flex items-end gap-2">
+        <span className="gradient-text text-4xl font-bold tracking-tight">{BRL(inactiveMrr)}</span>
+        <span className="mb-1 text-sm text-muted-foreground">/mês em risco · 39 pessoas</span>
+      </div>
+      <div className="mt-4 flex h-3 overflow-hidden rounded-full border border-border">
+        {inactiveSections.map((s) => (
+          <div key={s.key} className={cn("h-full", sevMeta[s.key].dist)} style={{ width: `${(s.count / inactiveTotal) * 100}%` }} />
+        ))}
+      </div>
+      <div className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
+        {inactiveSections.map((s) => (
+          <span key={s.key} className="inline-flex items-center gap-1.5">
+            <span className={cn("size-2.5 rounded-[3px]", sevMeta[s.key].dist)} />
+            {s.label.split(" ·")[0]} {s.count}
+          </span>
+        ))}
+      </div>
+      <div className="mt-5 flex flex-col divide-y divide-border overflow-hidden rounded-lg border border-border">
+        {inactiveSections.map((s) => (
+          <div key={s.key} className="flex items-center justify-between gap-2 p-3 text-sm">
+            <span className="flex items-center gap-2"><span className={cn("size-2 rounded-full", sevMeta[s.key].dist)} />{s.label}</span>
+            <span className="tabular-nums text-muted-foreground">{s.count}</span>
+          </div>
+        ))}
+      </div>
+      <GradientCTA label="Abrir por faixa de gravidade" />
+    </InactiveFrame>
+  );
+}
+
+/* ── I4 — Tabela ────────────────────────────────────────────────────── */
+function IN4Table() {
+  const flat = inactiveSections.flatMap((s) => s.people.map((p) => ({ ...p, s })));
+  return (
+    <InactiveFrame>
+      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-2">
+        <span className="gradient-text text-2xl font-bold">{BRL(inactiveMrr)}/mês</span>
+        <span className="text-xs text-muted-foreground">39 parados · 8 críticos · 142 ativos</span>
+      </div>
+      <div className="overflow-x-auto rounded-lg border border-border">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
+              <th className="px-3 py-2 font-medium">Assinante</th>
+              <th className="px-3 py-2 font-medium">Sem login</th>
+              <th className="px-3 py-2 text-right font-medium">MRR</th>
+            </tr>
+          </thead>
+          <tbody>
+            {flat.map((p) => (
+              <tr key={p.email} className={cn("border-b border-border last:border-0 hover:bg-accent/40", p.s.key === "critical" && "bg-red-500/[0.04]")}>
+                <td className="px-3 py-2">
+                  <div className="flex items-center gap-1.5 font-medium text-foreground">
+                    <span className={cn("size-1.5 rounded-full", sevMeta[p.s.key].dist)} />
+                    {p.name}
+                  </div>
+                  <div className="pl-3 text-xs text-muted-foreground">{p.plan}</div>
+                </td>
+                <td className="px-3 py-2 text-xs text-muted-foreground">{p.meta}</td>
+                <td className="px-3 py-2 text-right tabular-nums text-foreground">{BRL(p.mrr)}/mês</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <GradientCTA label="Exportar por gravidade · opt-in" />
+    </InactiveFrame>
+  );
+}
+
+/* ── I5 — MRR hero + breakdown ──────────────────────────────────────── */
+function IN5Mrr() {
+  const max = Math.max(...inactiveSections.map((s) => s.count));
+  return (
+    <InactiveFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">MRR em risco · churn antecipado</p>
+      <div className="mt-2">
+        <span className="gradient-text text-5xl font-bold tracking-tight">{BRL(inactiveMrr)}</span>
+      </div>
+      <p className="mt-1 text-sm text-muted-foreground">/mês na fila pra cancelar · 39 assinantes parados de 142 ativos</p>
+      <div className="mt-5 flex flex-col gap-3.5">
+        {inactiveSections.map((s) => (
+          <div key={s.key}>
+            <div className="mb-1 flex items-center justify-between gap-2 text-sm">
+              <span className="flex items-center gap-2"><span className={cn("size-2 rounded-full", sevMeta[s.key].dist)} /><span className="text-foreground">{s.label}</span></span>
+              <span className="tabular-nums text-muted-foreground">{s.count}</span>
+            </div>
+            <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+              <div className={cn("h-full rounded-full bg-gradient-to-r", sevMeta[s.key].bar)} style={{ width: `${(s.count / max) * 100}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <GradientCTA label="Ver assinantes por gravidade" />
+    </InactiveFrame>
+  );
+}
+
+function InactiveSubscribersResult() {
+  return (
+    <div className="flex flex-col gap-9">
+      <Variation n={1} title="Por gravidade (3 faixas)"><IN1Severity /></Variation>
+      <Variation n={2} title="Cards por pessoa"><IN2Cards /></Variation>
+      <Variation n={3} title="Distribuição"><IN3Dist /></Variation>
+      <Variation n={4} title="Tabela"><IN4Table /></Variation>
+      <Variation n={5} title="MRR + breakdown"><IN5Mrr /></Variation>
+    </div>
+  );
+}
+
 /** Registro: id do componente → componente de resultado. */
 export const resultComponents: Record<string, ComponentType> = {
   "card-declined-recovery-list": CardDeclinedRecoveryResult,
@@ -2203,6 +2701,8 @@ export const resultComponents: Record<string, ComponentType> = {
   "low-cost-buyer-readiness": LowCostBuyerReadinessResult,
   "course-completer-no-recent-purchase": CourseCompleterResult,
   "ticket-band-upsell-recommendation": TicketBandUpsellResult,
+  "high-value-one-time-non-subscribers": HighValueOneTimeResult,
+  "inactive-subscribers-no-member-access": InactiveSubscribersResult,
 };
 
 export function getResultComponent(id: string): ComponentType | undefined {

@@ -10,6 +10,8 @@ import renovacaoAssinaturaFalhada from "@/content/playbooks/analise/renovacao-da
 import prontidaoVendasAdicionais from "@/content/playbooks/analise/prontidao-vendas-adicionais-baixo-custo.md?raw";
 import concluinteCursoSemCompra from "@/content/playbooks/analise/concluinte-do-curso-sem-compra-recente.md?raw";
 import recomendacaoVendaIngressos from "@/content/playbooks/analise/recomendacao-venda-adicional-ingressos.md?raw";
+import naoAssinantesAltoValor from "@/content/playbooks/analise/nao-assinantes-alto-valor-uma-vez.md?raw";
+import assinantesInativosSemAcesso from "@/content/playbooks/analise/assinantes-inativos-sem-acesso.md?raw";
 
 export interface Playbook {
   /** Rótulo do grupo (ex: "Resgate · recuperação de vendas") */
@@ -311,6 +313,74 @@ export const playbooks: Record<string, Playbook> = {
     ],
     body: recomendacaoVendaIngressos,
     resultId: "ticket-band-upsell-recommendation",
+  },
+
+  "/analise/esteira-subir-de-ticket/nao-assinantes-de-alto-valor-que-pagam-apenas-uma-vez": {
+    group: "Esteira · subir de ticket",
+    groupEmoji: "🎯",
+    agent: "Cassio + Diego",
+    title: "não assinantes de alto valor que pagam apenas uma vez",
+    summary:
+      "Utilize quando o usuário solicitar compradores acima de um limite de valor de compra única que não possuam nenhuma assinatura ativa no momento.",
+    gatilhos: [
+      "pagaram mais de R$ 5 mil",
+      "produto único sem assinatura",
+      "cliente premium sem mensalidade",
+      "premium sem recorrência",
+      "ticket alto sem assinatura",
+      "Comprador de alto valor",
+      "nenhuma assinatura ativa",
+      "bilhete único de alto valor",
+    ],
+    perguntas: [
+      "Quem pagou mais de R$ 5 mil numa compra única e não tem nenhuma assinatura ativa?",
+      "Lista de clientes premium sem mensalidade — quero oferecer recorrência.",
+      "Compradores de alto valor que pagaram só uma vez; quais estão na hora do próximo passo?",
+      "Quem comprou produto único caro e nunca virou assinante?",
+      "Me mostra os bilhetes únicos de alto valor sem assinatura ativa, priorizados.",
+    ],
+    ferramentas: [
+      "painel_minhas_vendas",
+      "lista_de_assinaturas",
+      "pergunta",
+      "executar",
+    ],
+    body: naoAssinantesAltoValor,
+    resultId: "high-value-one-time-non-subscribers",
+  },
+
+  "/analise/retencao/assinantes-inativos-sem-acesso": {
+    group: "Retenção",
+    groupEmoji: "🩸",
+    agent: "Cassio",
+    title: "assinantes inativos sem acesso de membro",
+    summary:
+      "Utilize quando o usuário solicitar assinantes ativos que não acessaram a área de membros por mais de N dias (padrão 14, crítico 30+), com receita recorrente em risco.",
+    gatilhos: [
+      "assinantes que não logam",
+      "paga e parou de usar",
+      "não acessa a área de membros",
+      "sumiu mas continua pagando",
+      "assinantes inativos",
+      "assinantes não estão fazendo login",
+      "Não consegui acessar a área de membros",
+    ],
+    perguntas: [
+      "Quais assinantes ativos não logam na área de membros há mais de 14 dias?",
+      "Quem paga e parou de usar? Quero pegar antes do cancelamento.",
+      "Lista de assinantes inativos por gravidade — quanto de MRR tá em risco?",
+      "Quem sumiu mas continua pagando a assinatura?",
+      "Assinantes que nunca acessaram a área de membros — quem são?",
+    ],
+    ferramentas: [
+      "lista_de_assinaturas",
+      "lista_de_usuarios_membros",
+      "usuarios_membros_obtidos_por_lead",
+      "pergunta",
+      "executar",
+    ],
+    body: assinantesInativosSemAcesso,
+    resultId: "inactive-subscribers-no-member-access",
   },
 };
 
