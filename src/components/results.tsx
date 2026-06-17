@@ -3761,6 +3761,247 @@ function HotLeadsResult() {
   );
 }
 
+/* ════════════════════════════════════════════════════════════════════════
+   proposals-sent-no-follow-up — proposta no silêncio, ordenada por valor
+   ════════════════════════════════════════════════════════════════════════ */
+
+interface Proposal {
+  company: string;
+  valueCents: number;
+  days: number;
+  attendant: string;
+  stage: string;
+}
+
+const proposals: Proposal[] = [
+  { company: "Distribuidora Alfa", valueCents: 4997000, days: 12, attendant: "Peçanha", stage: "Proposta enviada" },
+  { company: "Construtora Beta", valueCents: 3850000, days: 9, attendant: "Lara", stage: "Proposta enviada" },
+  { company: "Clínica Vida", valueCents: 2990000, days: 18, attendant: "Vinícius", stage: "Orçamento" },
+  { company: "Studio Foto", valueCents: 1850000, days: 8, attendant: "Lara", stage: "Proposta enviada" },
+  { company: "Loja Norte", valueCents: 1290000, days: 25, attendant: "Peçanha", stage: "Orçamento" },
+  { company: "Academia Forte", valueCents: 990000, days: 31, attendant: "Vinícius", stage: "Proposta enviada" },
+  { company: "Restaurante Sabor", valueCents: 540000, days: 14, attendant: "Lara", stage: "Orçamento" },
+].sort((a, b) => b.valueCents - a.valueCents);
+
+const proposalsTotalCents = 19849000;
+const proposalsResultCount = 11;
+const proposalsOpenInStage = 34;
+const proposalsMaxValue = Math.max(...proposals.map((p) => p.valueCents));
+const proposalsTools = ["lista_de_pipelines", "lista_de_cartoes", "lista_de_atividades_por_lead"];
+
+/** Idade da proposta no silêncio → quanto mais velha, mais fria. */
+function ageTone(days: number) {
+  if (days >= 30) return "text-red-400";
+  if (days >= 15) return "text-amber-400";
+  return "text-muted-foreground";
+}
+
+function ProposalFrame({ children }: { children: ReactNode }) {
+  return (
+    <ResultFrame orchestration="PROPOSALS_SENT_NO_FOLLOW_UP" tag="Comercial" tools={proposalsTools}>
+      {children}
+    </ResultFrame>
+  );
+}
+
+function ProposalPremise() {
+  return (
+    <p className="text-xs italic leading-relaxed text-muted-foreground">
+      “Cards abertos no stage <span className="not-italic font-medium text-foreground/80">Proposta enviada</span> há
+      7+ dias, sem nenhuma atividade humana no lead desde então — me corrija se o seu stage for outro.”
+    </p>
+  );
+}
+
+/** Argumento de cadência (citado uma vez). */
+function CadenceNote() {
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-border bg-muted/30 p-3">
+      <Sparkles className="size-4 shrink-0 text-brand" />
+      <p className="text-xs leading-relaxed text-muted-foreground">
+        Proposta com follow-up nas 2 primeiras semanas fecha muito mais que no silêncio — e a conexão de 5 minutos é o follow-up mais barato que existe.
+      </p>
+    </div>
+  );
+}
+
+/* ── P1 — Lista por valor parado ────────────────────────────────────── */
+function PR1List() {
+  return (
+    <ProposalFrame>
+      <ProposalPremise />
+      <div className="mt-3 flex flex-wrap items-end gap-x-2 gap-y-1">
+        <span className="gradient-text text-4xl font-bold tracking-tight">{BRL(proposalsTotalCents / 100)}</span>
+        <span className="mb-1 text-base font-medium text-foreground">parados em proposta</span>
+      </div>
+      <p className="mt-1 text-xs text-muted-foreground">{proposalsResultCount} propostas no silêncio · de {proposalsOpenInStage} abertas no stage</p>
+      <ul className="mt-4 flex flex-col gap-px">
+        {proposals.map((p) => (
+          <li key={p.company} className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-accent/50">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">{initials(p.company)}</span>
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm font-medium text-foreground">{p.company}</div>
+              <div className="truncate text-xs text-muted-foreground"><span className={ageTone(p.days)}>há {p.days} dias</span> · {p.attendant}</div>
+            </div>
+            <span className="shrink-0 text-sm font-semibold tabular-nums text-foreground">{BRL(p.valueCents / 100)}</span>
+          </li>
+        ))}
+      </ul>
+      <button type="button" className="mt-1 px-2 text-xs font-medium text-brand hover:underline">+ {proposalsResultCount - proposals.length} propostas paradas</button>
+      <div className="mt-4 mb-1"><CadenceNote /></div>
+      <GradientCTA label="Tarefa de follow-up pro vendedor · opt-in" />
+    </ProposalFrame>
+  );
+}
+
+/* ── P2 — Cards ─────────────────────────────────────────────────────── */
+function PR2Cards() {
+  return (
+    <ProposalFrame>
+      <div className="flex flex-wrap items-baseline gap-2">
+        <span className="gradient-text text-2xl font-bold">{BRL(proposalsTotalCents / 100)}</span>
+        <span className="text-xs text-muted-foreground">parados · {proposalsResultCount} propostas no silêncio</span>
+      </div>
+      <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
+        {proposals.map((p) => (
+          <div key={p.company} className={cn("rounded-xl border bg-card/40 p-3", p.days >= 30 ? "border-red-500/30" : "border-border")}>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">{initials(p.company)}</span>
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-medium text-foreground">{p.company}</div>
+                  <div className="truncate text-[11px] text-muted-foreground">{p.stage} · {p.attendant}</div>
+                </div>
+              </div>
+            </div>
+            <div className="mt-2.5 flex items-center justify-between">
+              <span className="text-sm font-semibold tabular-nums text-foreground">{BRL(p.valueCents / 100)}</span>
+              <span className={cn("text-[11px]", ageTone(p.days))}>há {p.days} dias</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      <GradientCTA label="Sequência D+7 / D+10 / D+14 · opt-in" />
+    </ProposalFrame>
+  );
+}
+
+/* ── P3 — Envelhecimento (aging) ────────────────────────────────────── */
+function PR3Aging() {
+  const buckets = [
+    { label: "7–14 dias", tone: "bg-zinc-500", test: (d: number) => d < 15 },
+    { label: "15–30 dias", tone: "bg-amber-500", test: (d: number) => d >= 15 && d < 31 },
+    { label: "30+ dias", tone: "bg-red-500", test: (d: number) => d >= 31 },
+  ].map((b) => {
+    const items = proposals.filter((p) => b.test(p.days));
+    return { ...b, count: items.length, value: items.reduce((s, p) => s + p.valueCents, 0) };
+  });
+  const maxVal = Math.max(...buckets.map((b) => b.value));
+  return (
+    <ProposalFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Propostas paradas por idade no silêncio</p>
+      <div className="mt-2 flex items-end gap-2">
+        <span className="gradient-text text-4xl font-bold tracking-tight">{BRL(proposalsTotalCents / 100)}</span>
+        <span className="mb-1 text-sm text-muted-foreground">em {proposalsResultCount} propostas</span>
+      </div>
+      <div className="mt-5 flex flex-col gap-4">
+        {buckets.map((b) => (
+          <div key={b.label}>
+            <div className="mb-1 flex items-center justify-between gap-2 text-sm">
+              <span className="flex items-center gap-2"><span className={cn("size-2 rounded-full", b.tone)} /><span className="text-foreground">{b.label}</span></span>
+              <span className="text-xs tabular-nums text-muted-foreground">{b.count} · {BRL(b.value / 100)}</span>
+            </div>
+            <div className="h-2.5 overflow-hidden rounded-full bg-muted">
+              <div className={cn("h-full rounded-full", b.tone)} style={{ width: `${maxVal ? (b.value / maxVal) * 100 : 0}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="mt-4 text-xs leading-relaxed text-muted-foreground">Quanto mais à direita da idade, mais frio o deal — priorize valor alto que já passou de 2 semanas.</p>
+      <GradientCTA label="Atacar os mais velhos e caros · opt-in" />
+    </ProposalFrame>
+  );
+}
+
+/* ── P4 — Tabela ────────────────────────────────────────────────────── */
+function PR4Table() {
+  return (
+    <ProposalFrame>
+      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-2">
+        <span className="gradient-text text-2xl font-bold">{BRL(proposalsTotalCents / 100)}</span>
+        <span className="text-xs text-muted-foreground">{proposalsResultCount} no silêncio · {proposalsOpenInStage} abertas no stage</span>
+      </div>
+      <div className="overflow-x-auto rounded-lg border border-border">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
+              <th className="px-3 py-2 font-medium">Proposta</th>
+              <th className="px-3 py-2 font-medium">Enviada</th>
+              <th className="px-3 py-2 font-medium">Vendedor</th>
+              <th className="px-3 py-2 text-right font-medium">Valor</th>
+            </tr>
+          </thead>
+          <tbody>
+            {proposals.map((p) => (
+              <tr key={p.company} className={cn("border-b border-border last:border-0 hover:bg-accent/40", p.days >= 30 && "bg-red-500/[0.04]")}>
+                <td className="px-3 py-2">
+                  <div className="font-medium text-foreground">{p.company}</div>
+                  <div className="text-xs text-muted-foreground">{p.stage}</div>
+                </td>
+                <td className={cn("px-3 py-2 text-xs tabular-nums", ageTone(p.days))}>há {p.days}d</td>
+                <td className="px-3 py-2 text-xs text-muted-foreground">{p.attendant}</td>
+                <td className="px-3 py-2 text-right font-semibold tabular-nums text-foreground">{BRL(p.valueCents / 100)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <GradientCTA label="Exportar propostas paradas · opt-in" />
+    </ProposalFrame>
+  );
+}
+
+/* ── P5 — Métrica hero ──────────────────────────────────────────────── */
+function PR5Metric() {
+  const top = proposals[0];
+  return (
+    <ProposalFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Dinheiro parado no stage de proposta</p>
+      <div className="mt-2">
+        <span className="gradient-text text-5xl font-bold tracking-tight">{BRL(proposalsTotalCents / 100)}</span>
+      </div>
+      <p className="mt-1 text-sm text-muted-foreground">em {proposalsResultCount} propostas que ninguém voltou a tocar</p>
+      <div className="mt-5 rounded-xl border border-border bg-card/40 p-3">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Maior deal parado</span>
+          <span className={cn("text-[11px]", ageTone(top.days))}>há {top.days} dias</span>
+        </div>
+        <div className="mt-1 flex items-baseline justify-between gap-2">
+          <span className="truncate text-sm font-medium text-foreground">{top.company} · {top.attendant}</span>
+          <span className="shrink-0 text-lg font-bold tabular-nums text-foreground">{BRL(top.valueCents / 100)}</span>
+        </div>
+        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
+          <div className="h-full rounded-full gradient-brand" style={{ width: `${(top.valueCents / proposalsMaxValue) * 100}%` }} />
+        </div>
+      </div>
+      <div className="mt-3"><CadenceNote /></div>
+      <GradientCTA label="Abrir fila de follow-up · opt-in" />
+    </ProposalFrame>
+  );
+}
+
+function ProposalsResult() {
+  return (
+    <div className="flex flex-col gap-9">
+      <Variation n={1} title="Por valor parado"><PR1List /></Variation>
+      <Variation n={2} title="Cards por deal"><PR2Cards /></Variation>
+      <Variation n={3} title="Envelhecimento (aging)"><PR3Aging /></Variation>
+      <Variation n={4} title="Tabela"><PR4Table /></Variation>
+      <Variation n={5} title="Valor parado (hero)"><PR5Metric /></Variation>
+    </div>
+  );
+}
+
 /** Registro: id do componente → componente de resultado. */
 export const resultComponents: Record<string, ComponentType> = {
   "card-declined-recovery-list": CardDeclinedRecoveryResult,
@@ -3777,6 +4018,7 @@ export const resultComponents: Record<string, ComponentType> = {
   "expiring-trial-not-converted": ExpiringTrialResult,
   "missed-meeting-not-rescheduled": MissedMeetingResult,
   "hot-leads-no-recent-contact": HotLeadsResult,
+  "proposals-sent-no-follow-up": ProposalsResult,
 };
 
 export function getResultComponent(id: string): ComponentType | undefined {

@@ -16,6 +16,7 @@ import assinanteInativoComprou from "@/content/playbooks/analise/assinante-inati
 import julgamentoFinalNaoConvertido from "@/content/playbooks/analise/julgamento-final-ainda-nao-convertido.md?raw";
 import reuniaoFaltadaNaoRemarcada from "@/content/playbooks/analise/reuniao-faltada-nao-remarcada.md?raw";
 import leadsQuentesSemContato from "@/content/playbooks/analise/leads-quentes-sem-contato-recente.md?raw";
+import propostasEnviadasSemAcompanhamento from "@/content/playbooks/analise/propostas-enviadas-sem-acompanhamento.md?raw";
 
 export interface Playbook {
   /** Rótulo do grupo (ex: "Resgate · recuperação de vendas") */
@@ -517,6 +518,41 @@ export const playbooks: Record<string, Playbook> = {
     ],
     body: leadsQuentesSemContato,
     resultId: "hot-leads-no-recent-contact",
+  },
+  "/analise/comercial-agenda-e-pipeline/propostas-enviadas-sem-acompanhamento": {
+    group: "Comercial · agenda e pipeline",
+    groupEmoji: "📞",
+    agent: "Vinícius + Lara",
+    title: "propostas enviadas sem acompanhamento",
+    summary:
+      "Utilize quando o usuário solicitar propostas enviadas há mais de N dias sem nenhum contato posterior.",
+    gatilhos: [
+      "proposta sem resposta",
+      "proposta enviada e ninguém respondeu",
+      "propostas paradas",
+      "follow-up de proposta",
+      "ninguém voltou a falar com o cliente",
+      "Propostas sem acompanhamento",
+      "propostas paralisadas",
+    ],
+    perguntas: [
+      "Quais propostas enviadas há mais de 7 dias ninguém acompanhou?",
+      "Quanto de dinheiro tá parado em proposta sem follow-up?",
+      "Lista de propostas paradas por valor — por onde começo?",
+      "Propostas no silêncio há mais de 2 semanas: quais são e de quem?",
+      "Qual o maior deal parado no stage de proposta sem ninguém voltar a falar?",
+    ],
+    ferramentas: [
+      "lista_de_pipelines",
+      "lista_de_etapas",
+      "lista_de_cartões",
+      "histórico_de_cartas",
+      "lista_de_atividades_por_lead",
+      "pergunta",
+      "executar",
+    ],
+    body: propostasEnviadasSemAcompanhamento,
+    resultId: "proposals-sent-no-follow-up",
   },
 };
 
