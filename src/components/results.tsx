@@ -1941,6 +1941,258 @@ function CourseCompleterResult() {
   );
 }
 
+/* ════════════════════════════════════════════════════════════════════════
+   ticket-band-upsell-recommendation — compradores por perfil + produto/rota
+   ════════════════════════════════════════════════════════════════════════ */
+
+const clusterMeta: Record<string, { chip: string; bar: string; dist: string }> = {
+  empresa: { chip: "border-violet-500/30 bg-violet-500/10 text-violet-400", bar: "from-violet-400 to-violet-300", dist: "bg-violet-500" },
+  frequente: { chip: "border-amber-500/30 bg-amber-500/10 text-amber-400", bar: "from-amber-400 to-amber-300", dist: "bg-amber-500" },
+  convicto: { chip: "border-emerald-500/30 bg-emerald-500/10 text-emerald-400", bar: "from-emerald-400 to-emerald-300", dist: "bg-emerald-500" },
+};
+
+interface ClusterBuyer {
+  name: string;
+  email: string;
+  purchases: number;
+  spent: number;
+}
+interface Cluster {
+  key: keyof typeof clusterMeta;
+  label: string;
+  action: string;
+  product: string | null;
+  count: number;
+  buyers: ClusterBuyer[];
+}
+
+const clusters: Cluster[] = [
+  { key: "empresa", label: "Perfil empresa", action: "rota 1:1 com vendedor sênior — quer implementação, não curso", product: "Mentoria 1:1 · R$ 4.997", count: 89, buyers: [
+    { name: "Carlos Bauer", email: "carlos@agencia.com.br", purchases: 3, spent: 1491 },
+    { name: "Ana Lima", email: "ana@criativa.co", purchases: 2, spent: 994 },
+  ]},
+  { key: "frequente", label: "Frequente", action: "gap de catálogo: criar Pacote Anual que empacote os baratos", product: null, count: 82, buyers: [
+    { name: "Marina Alves", email: "marina.alves@gmail.com", purchases: 4, spent: 788 },
+    { name: "Lucas Pereira", email: "lucas.pereira@gmail.com", purchases: 3, spent: 591 },
+  ]},
+  { key: "convicto", label: "Convicto", action: "oferta direta do produto-âncora da faixa alta", product: "Programa Anual · R$ 1.297", count: 47, buyers: [
+    { name: "Diego Martins", email: "diego.m@outlook.com", purchases: 2, spent: 694 },
+    { name: "Beatriz Lima", email: "bia.lima@gmail.com", purchases: 2, spent: 394 },
+  ]},
+];
+
+const ticketStats = { cohortRawSize: 218, excludedAlreadyUpgraded: 34, setACount: 8, setBCount: 5 };
+const ticketTotal = clusters.reduce((s, c) => s + c.count, 0);
+const ticketTools = ["lista_de_produtos", "painel_minhas_vendas", "leads_search", "executar"];
+
+function TicketFrame({ children }: { children: ReactNode }) {
+  return (
+    <ResultFrame orchestration="TICKET_BAND_UPSELL_RECOMMENDATION" tag="Vendas" tools={ticketTools}>
+      {children}
+    </ResultFrame>
+  );
+}
+
+function TicketPremise() {
+  return (
+    <p className="text-xs italic leading-relaxed text-muted-foreground">
+      “Compradores de R$ 100-500 que ainda não compraram nada de R$ 800-3.000,
+      separados em 3 perfis por regras explícitas.”
+    </p>
+  );
+}
+
+function ClusterChip({ c }: { c: Cluster }) {
+  return (
+    <span className={cn("rounded-full border px-2 py-0.5 text-[11px] font-medium", clusterMeta[c.key].chip)}>
+      {c.label}
+    </span>
+  );
+}
+
+/* ── T1 — Grupos por perfil ─────────────────────────────────────────── */
+function TB1Groups() {
+  return (
+    <TicketFrame>
+      <TicketPremise />
+      <div className="mt-3 flex flex-wrap items-end gap-x-2 gap-y-1">
+        <span className="gradient-text text-4xl font-bold tracking-tight">218</span>
+        <span className="mb-1 text-base font-medium text-foreground">prontos pra subir de ticket</span>
+      </div>
+      <p className="mt-1 text-xs text-muted-foreground">3 perfis · 34 já subiram (fora) · regras explícitas (você pode discordar)</p>
+      <div className="mt-5 flex flex-col gap-3">
+        {clusters.map((c) => (
+          <div key={c.key} className="rounded-lg border border-border bg-card/40 p-3.5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="flex items-center gap-2">
+                <ClusterChip c={c} />
+                <span className="text-sm font-medium text-foreground">{c.count} pessoas</span>
+              </span>
+              {c.product && <span className="font-mono text-[11px] text-muted-foreground">→ {c.product}</span>}
+            </div>
+            <p className="mt-1.5 text-xs text-muted-foreground">▸ {c.action}</p>
+            <ul className="mt-2 flex flex-col gap-1">
+              {c.buyers.map((b) => (
+                <li key={b.email} className="flex items-center justify-between text-xs">
+                  <span className="text-foreground">{b.name} <span className="text-muted-foreground">· {b.email}</span></span>
+                  <span className="text-muted-foreground">{b.purchases}× · {BRL(b.spent)}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+      <GradientCTA label="Criar campanha por perfil · opt-in" />
+    </TicketFrame>
+  );
+}
+
+/* ── T2 — Cards por pessoa ──────────────────────────────────────────── */
+function TB2Cards() {
+  const flat = clusters.flatMap((c) => c.buyers.map((b) => ({ ...b, c })));
+  return (
+    <TicketFrame>
+      <div className="flex flex-wrap items-baseline gap-2">
+        <span className="gradient-text text-2xl font-bold">218 compradores</span>
+        <span className="text-xs text-muted-foreground">prontos pra subir de ticket</span>
+      </div>
+      <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
+        {flat.map((b) => (
+          <div key={b.email} className="rounded-xl border border-border bg-card/40 p-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">{initials(b.name)}</span>
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-medium text-foreground">{b.name}</div>
+                  <div className="text-[11px] text-muted-foreground">{b.purchases}× · {BRL(b.spent)}</div>
+                </div>
+              </div>
+              <ClusterChip c={b.c} />
+            </div>
+            <p className="mt-2 text-[11px] text-muted-foreground">→ {b.c.product || b.c.action}</p>
+          </div>
+        ))}
+      </div>
+      <GradientCTA label="Materializar segmentos por perfil · opt-in" />
+    </TicketFrame>
+  );
+}
+
+/* ── T3 — Distribuição (clusters) ───────────────────────────────────── */
+function TB3Dist() {
+  return (
+    <TicketFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Distribuição por perfil · faixa baixa → alta</p>
+      <div className="mt-2 flex items-end gap-2">
+        <span className="gradient-text text-4xl font-bold tracking-tight">218</span>
+        <span className="mb-1 text-sm text-muted-foreground">compradores em 3 perfis</span>
+      </div>
+      <div className="mt-4 flex h-3 overflow-hidden rounded-full border border-border">
+        {clusters.map((c) => (
+          <div key={c.key} className={cn("h-full", clusterMeta[c.key].dist)} style={{ width: `${(c.count / ticketTotal) * 100}%` }} />
+        ))}
+      </div>
+      <div className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
+        {clusters.map((c) => (
+          <span key={c.key} className="inline-flex items-center gap-1.5">
+            <span className={cn("size-2.5 rounded-[3px]", clusterMeta[c.key].dist)} />
+            {c.label} {Math.round((c.count / ticketTotal) * 100)}% ({c.count})
+          </span>
+        ))}
+      </div>
+      <div className="mt-5 flex flex-col divide-y divide-border overflow-hidden rounded-lg border border-border">
+        {clusters.map((c) => (
+          <div key={c.key} className="p-3">
+            <div className="flex items-center gap-2"><ClusterChip c={c} /><span className="text-sm font-medium text-foreground">{c.count}</span></div>
+            <p className="mt-1 text-xs text-muted-foreground">▸ {c.action}{c.product ? ` (${c.product})` : ""}</p>
+          </div>
+        ))}
+      </div>
+      <GradientCTA label="Abrir perfil por perfil" />
+    </TicketFrame>
+  );
+}
+
+/* ── T4 — Tabela ────────────────────────────────────────────────────── */
+function TB4Table() {
+  const flat = clusters.flatMap((c) => c.buyers.map((b) => ({ ...b, c })));
+  return (
+    <TicketFrame>
+      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-2">
+        <span className="gradient-text text-2xl font-bold">218 compradores</span>
+        <span className="text-xs text-muted-foreground">8 produtos faixa baixa · 5 alta · 34 já subiram</span>
+      </div>
+      <div className="overflow-x-auto rounded-lg border border-border">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
+              <th className="px-3 py-2 font-medium">Pessoa</th>
+              <th className="px-3 py-2 font-medium">Perfil</th>
+              <th className="px-3 py-2 text-right font-medium">Gasto</th>
+              <th className="px-3 py-2 font-medium">Recomendação</th>
+            </tr>
+          </thead>
+          <tbody>
+            {flat.map((b) => (
+              <tr key={b.email} className="border-b border-border last:border-0 hover:bg-accent/40">
+                <td className="px-3 py-2">
+                  <div className="font-medium text-foreground">{b.name}</div>
+                  <div className="text-xs text-muted-foreground">{b.purchases}× compras</div>
+                </td>
+                <td className="px-3 py-2"><ClusterChip c={b.c} /></td>
+                <td className="px-3 py-2 text-right tabular-nums text-foreground">{BRL(b.spent)}</td>
+                <td className="px-3 py-2 text-xs text-muted-foreground">{b.c.product || b.c.action}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <GradientCTA label="Exportar por perfil · opt-in" />
+    </TicketFrame>
+  );
+}
+
+/* ── T5 — Métrica + clusters ────────────────────────────────────────── */
+function TB5Metric() {
+  const max = Math.max(...clusters.map((c) => c.count));
+  return (
+    <TicketFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Coorte pra subir de ticket</p>
+      <div className="mt-2 flex items-end gap-2">
+        <span className="gradient-text text-5xl font-bold tracking-tight">218</span>
+        <span className="mb-1.5 text-sm text-muted-foreground">compradores · {ticketStats.excludedAlreadyUpgraded} já subiram</span>
+      </div>
+      <div className="mt-5 flex flex-col gap-3.5">
+        {clusters.map((c) => (
+          <div key={c.key}>
+            <div className="mb-1 flex items-center justify-between gap-2 text-sm">
+              <ClusterChip c={c} />
+              <span className="tabular-nums text-muted-foreground">{c.count}</span>
+            </div>
+            <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+              <div className={cn("h-full rounded-full bg-gradient-to-r", clusterMeta[c.key].bar)} style={{ width: `${(c.count / max) * 100}%` }} />
+            </div>
+            <p className="mt-1 text-[11px] text-muted-foreground">▸ {c.action}</p>
+          </div>
+        ))}
+      </div>
+      <GradientCTA label="Ver recomendação por perfil" />
+    </TicketFrame>
+  );
+}
+
+function TicketBandUpsellResult() {
+  return (
+    <div className="flex flex-col gap-9">
+      <Variation n={1} title="Grupos por perfil"><TB1Groups /></Variation>
+      <Variation n={2} title="Cards por pessoa"><TB2Cards /></Variation>
+      <Variation n={3} title="Distribuição"><TB3Dist /></Variation>
+      <Variation n={4} title="Tabela"><TB4Table /></Variation>
+      <Variation n={5} title="Métrica + clusters"><TB5Metric /></Variation>
+    </div>
+  );
+}
+
 /** Registro: id do componente → componente de resultado. */
 export const resultComponents: Record<string, ComponentType> = {
   "card-declined-recovery-list": CardDeclinedRecoveryResult,
@@ -1950,6 +2202,7 @@ export const resultComponents: Record<string, ComponentType> = {
   "subscription-renewal-failed": SubscriptionRenewalResult,
   "low-cost-buyer-readiness": LowCostBuyerReadinessResult,
   "course-completer-no-recent-purchase": CourseCompleterResult,
+  "ticket-band-upsell-recommendation": TicketBandUpsellResult,
 };
 
 export function getResultComponent(id: string): ComponentType | undefined {

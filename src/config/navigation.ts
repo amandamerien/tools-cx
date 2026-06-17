@@ -109,6 +109,7 @@ export const navigation: NavSection[] = [
         children: [
           { title: "prontidão para vendas adicionais de baixo custo" },
           { title: "concluinte do curso sem compra recente" },
+          { title: "recomendação de venda adicional de ingressos" },
         ],
       },
       {

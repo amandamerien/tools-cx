@@ -9,6 +9,7 @@ import compraCanceladaNaoDevolvida from "@/content/playbooks/analise/compra-canc
 import renovacaoAssinaturaFalhada from "@/content/playbooks/analise/renovacao-da-assinatura-falhada.md?raw";
 import prontidaoVendasAdicionais from "@/content/playbooks/analise/prontidao-vendas-adicionais-baixo-custo.md?raw";
 import concluinteCursoSemCompra from "@/content/playbooks/analise/concluinte-do-curso-sem-compra-recente.md?raw";
+import recomendacaoVendaIngressos from "@/content/playbooks/analise/recomendacao-venda-adicional-ingressos.md?raw";
 
 export interface Playbook {
   /** Rótulo do grupo (ex: "Resgate · recuperação de vendas") */
@@ -274,6 +275,42 @@ export const playbooks: Record<string, Playbook> = {
     ],
     body: concluinteCursoSemCompra,
     resultId: "course-completer-no-recent-purchase",
+  },
+
+  "/analise/esteira-subir-de-ticket/recomendacao-de-venda-adicional-de-ingressos": {
+    group: "Esteira · subir de ticket",
+    groupEmoji: "🎯",
+    agent: "Cassio + Diego",
+    title: "recomendação de venda adicional de ingressos",
+    summary:
+      "Utilize quando o usuário solicitar compradores em uma faixa de preço inferior que se encaixem em uma faixa de preço superior, segmentados em perfis com o produto ou rota adequada para cada perfil.",
+    gatilhos: [
+      "comprou ticket de R$ 100 a 500",
+      "perfil pra comprar R$ 800 a 3.000",
+      "subir o ticket",
+      "sugere o produto certo pra cada um",
+      "qual produto recomendar",
+      "venda adicional de ingressos",
+      "o melhor próximo produto",
+    ],
+    perguntas: [
+      "Quem comprou ticket de R$ 100 a 500 e tem perfil pra comprar R$ 800 a 3.000?",
+      "Me separa quem pode subir de ticket por perfil, com o produto certo pra cada um.",
+      "Compradores baratos prontos pro upsell caro — agrupa por perfil (empresa, frequente, convicto).",
+      "Qual o melhor próximo produto pra cada comprador da faixa baixa?",
+      "Lista de venda adicional de ingressos: quem sobe de faixa e o que oferecer.",
+    ],
+    ferramentas: [
+      "lista_de_produtos",
+      "painel_minhas_vendas",
+      "metricas_de_atividades_por_lead",
+      "esquema_de_filtro_de_leads",
+      "leads_search",
+      "pergunta",
+      "executar",
+    ],
+    body: recomendacaoVendaIngressos,
+    resultId: "ticket-band-upsell-recommendation",
   },
 };
 
