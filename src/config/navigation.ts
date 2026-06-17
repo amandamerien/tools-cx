@@ -120,7 +120,7 @@ export const navigation: NavSection[] = [
         children: [
           { title: "assinantes inativos sem acesso" },
           { title: "assinante inativo comprou uma única vez" },
-          { title: "julgamento final ainda não concluído" },
+          { title: "julgamento final ainda não convertido" },
         ],
       },
       {

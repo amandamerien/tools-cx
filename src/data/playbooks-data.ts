@@ -13,6 +13,7 @@ import recomendacaoVendaIngressos from "@/content/playbooks/analise/recomendacao
 import naoAssinantesAltoValor from "@/content/playbooks/analise/nao-assinantes-alto-valor-uma-vez.md?raw";
 import assinantesInativosSemAcesso from "@/content/playbooks/analise/assinantes-inativos-sem-acesso.md?raw";
 import assinanteInativoComprou from "@/content/playbooks/analise/assinante-inativo-comprou-uma-unica-vez.md?raw";
+import julgamentoFinalNaoConvertido from "@/content/playbooks/analise/julgamento-final-ainda-nao-convertido.md?raw";
 
 export interface Playbook {
   /** Rótulo do grupo (ex: "Resgate · recuperação de vendas") */
@@ -415,6 +416,38 @@ export const playbooks: Record<string, Playbook> = {
     ],
     body: assinanteInativoComprou,
     resultId: "win-back-canceled-then-one-time",
+  },
+  "/analise/retencao/julgamento-final-ainda-nao-convertido": {
+    group: "Retenção",
+    groupEmoji: "🩸",
+    agent: "Cassio",
+    title: "julgamento final ainda não convertido",
+    summary:
+      "Utilize esta opção quando o usuário solicitar assinantes em período de teste gratuito cujo período de teste termina em breve (janelas de urgência de 3/7/14 dias) e que ainda não se tornaram assinantes pagos.",
+    gatilhos: [
+      "trial chegando ao fim",
+      "trial expirando",
+      "ainda não virou pagante",
+      "quem está no trial gratuito",
+      "Fim do período de teste gratuito",
+      "O julgamento está prestes a expirar",
+      "Conversão do ensaio clínico em risco",
+    ],
+    perguntas: [
+      "Quem está no trial gratuito e acaba nos próximos 3 dias?",
+      "Trials expirando por urgência — quem quase não logou na área de membros?",
+      "Lista de quem está testando e ainda não virou pagante, do mais urgente ao menos.",
+      "Quais trials acabam em até 7 dias? Quero mandar um incentivo antes.",
+      "Quem nunca acessou a área de membros e o trial expira essa semana?",
+    ],
+    ferramentas: [
+      "lista_de_assinaturas",
+      "lista_de_usuarios_membros",
+      "pergunta",
+      "executar",
+    ],
+    body: julgamentoFinalNaoConvertido,
+    resultId: "expiring-trial-not-converted",
   },
 };
 

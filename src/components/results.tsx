@@ -2935,6 +2935,294 @@ function WinbackResult() {
   );
 }
 
+/* ════════════════════════════════════════════════════════════════════════
+   expiring-trial-not-converted — trial acabando, ainda não virou pagante
+   ════════════════════════════════════════════════════════════════════════ */
+
+type TrialBucketKey = "3d" | "7d" | "14d";
+/** engaged: true logou ≤7d · false não loga · null sem cadastro de membro */
+type Engaged = true | false | null;
+
+interface TrialPerson {
+  name: string;
+  email: string;
+  product: string;
+  priceCents: number;
+  days: number;
+  engaged: Engaged;
+}
+interface TrialBucket {
+  key: TrialBucketKey;
+  emoji: string;
+  label: string;
+  count: number;
+  people: TrialPerson[];
+}
+
+const trialBucketMeta: Record<TrialBucketKey, { chip: string; dot: string; bar: string }> = {
+  "3d": { chip: "border-red-500/30 bg-red-500/10 text-red-400", dot: "bg-red-500", bar: "bg-red-500" },
+  "7d": { chip: "border-amber-500/30 bg-amber-500/10 text-amber-400", dot: "bg-amber-500", bar: "bg-amber-500" },
+  "14d": { chip: "border-emerald-500/30 bg-emerald-500/10 text-emerald-400", dot: "bg-emerald-500", bar: "bg-emerald-500" },
+};
+
+/** Engajamento → chip. Frio (não loga) é o alvo prioritário. */
+function engMeta(e: Engaged): { label: string; chip: string; dot: string } {
+  if (e === true) return { label: "logou", chip: "border-brand/40 bg-brand/10 text-brand", dot: "bg-brand" };
+  if (e === false) return { label: "não loga", chip: "border-red-500/30 bg-red-500/10 text-red-400", dot: "bg-red-500" };
+  return { label: "sem cadastro", chip: "border-border bg-muted/60 text-muted-foreground", dot: "bg-zinc-500" };
+}
+
+const trialBuckets: TrialBucket[] = [
+  { key: "3d", emoji: "🔴", label: "Acabam em ≤3 dias", count: 14, people: [
+    { name: "Carla Mendes", email: "carla.m@gmail.com", product: "Clube Pro", priceCents: 9700, days: 2, engaged: false },
+    { name: "Otávio Reis", email: "otavio.reis@outlook.com", product: "Mentoria Anual", priceCents: 19700, days: 3, engaged: null },
+  ]},
+  { key: "7d", emoji: "🟡", label: "Acabam em 4–7 dias", count: 12, people: [
+    { name: "Juliana Castro", email: "ju.castro@gmail.com", product: "Clube Pro", priceCents: 9700, days: 5, engaged: true },
+    { name: "Marcos Vinícius", email: "marcos.v@hotmail.com", product: "Plano Premium", priceCents: 19700, days: 6, engaged: false },
+  ]},
+  { key: "14d", emoji: "🟢", label: "Acabam em 8–14 dias", count: 15, people: [
+    { name: "Renata Lopes", email: "renata.l@gmail.com", product: "Clube Pro", priceCents: 9700, days: 11, engaged: true },
+    { name: "Felipe Araújo", email: "felipe.a@gmail.com", product: "Curso Anual", priceCents: 29700, days: 13, engaged: null },
+  ]},
+];
+
+const trialTotalActive = 89;
+const trialResultCount = trialBuckets.reduce((s, b) => s + b.count, 0);
+const trialLowEng3d = 6;
+const trialToolsList = ["lista_de_assinaturas", "lista_de_usuarios_membros", "executar"];
+
+function TrialFrame({ children }: { children: ReactNode }) {
+  return (
+    <ResultFrame orchestration="TRIAL_EXPIRING_NOT_CONVERTED" tag="Membros" tools={trialToolsList}>
+      {children}
+    </ResultFrame>
+  );
+}
+
+function TrialPremise() {
+  return (
+    <p className="text-xs italic leading-relaxed text-muted-foreground">
+      “Em trial gratuito (nenhuma cobrança paga ainda) com o teste acabando em
+      até 14 dias — por urgência e cruzado com login na área de membros.”
+    </p>
+  );
+}
+
+/** Dentro do bucket, quem não logou vem primeiro (evapora sem contato). */
+function sortByEngagement(people: TrialPerson[]) {
+  return [...people].sort((a, b) => (a.engaged === true ? 1 : 0) - (b.engaged === true ? 1 : 0));
+}
+
+/* ── T1 — Por urgência (3 buckets) ──────────────────────────────────── */
+function TR1Buckets() {
+  return (
+    <TrialFrame>
+      <TrialPremise />
+      <p className="mt-3 text-sm text-foreground">
+        <span className="font-semibold">{trialTotalActive} pessoas testando agora</span> · {trialResultCount} acabam em ≤14 dias
+      </p>
+      <p className="mt-0.5 text-xs text-muted-foreground">{trialBuckets[0].count} acabam em 3 dias — {trialLowEng3d} quase não logaram</p>
+      <div className="mt-5 flex flex-col gap-4">
+        {trialBuckets.map((b) => (
+          <div key={b.key}>
+            <div className="mb-2 flex items-center gap-2">
+              <span className={cn("size-2 rounded-full", trialBucketMeta[b.key].dot)} />
+              <span className="text-sm font-medium text-foreground">{b.label}</span>
+              <span className={cn("rounded-full border px-2 py-0.5 text-[11px] font-medium tabular-nums", trialBucketMeta[b.key].chip)}>{b.count}</span>
+            </div>
+            <ul className="flex flex-col gap-px">
+              {sortByEngagement(b.people).map((p) => {
+                const e = engMeta(p.engaged);
+                return (
+                  <li key={p.email} className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-accent/50">
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">{initials(p.name)}</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-medium text-foreground">{p.name}</div>
+                      <div className="truncate text-xs text-muted-foreground">{p.product} · acaba em {p.days}d</div>
+                    </div>
+                    <span className={cn("shrink-0 rounded-full border px-1.5 py-0.5 text-[10px] font-medium", e.chip)}>{e.label}</span>
+                    <span className="w-16 shrink-0 text-right text-sm font-medium tabular-nums text-foreground">{BRL(p.priceCents / 100)}</span>
+                  </li>
+                );
+              })}
+            </ul>
+            {b.count > b.people.length && (
+              <button type="button" className="mt-1 px-2 text-xs font-medium text-brand hover:underline">+ {b.count - b.people.length} nessa janela</button>
+            )}
+          </div>
+        ))}
+      </div>
+      <GradientCTA label="Falar com os ≤3d que não logam · opt-in" />
+    </TrialFrame>
+  );
+}
+
+/* ── T2 — Cards ─────────────────────────────────────────────────────── */
+function TR2Cards() {
+  const flat = trialBuckets.flatMap((b) => sortByEngagement(b.people).map((p) => ({ ...p, b })));
+  return (
+    <TrialFrame>
+      <div className="flex flex-wrap items-baseline gap-2">
+        <span className="gradient-text text-2xl font-bold">{trialResultCount}</span>
+        <span className="text-sm text-foreground">trials expirando</span>
+        <span className="text-xs text-muted-foreground">· de {trialTotalActive} ativos</span>
+      </div>
+      <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
+        {flat.map((p) => {
+          const e = engMeta(p.engaged);
+          return (
+            <div key={p.email} className={cn("rounded-xl border bg-card/40 p-3", p.b.key === "3d" ? "border-red-500/30" : "border-border")}>
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">{initials(p.name)}</span>
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-medium text-foreground">{p.name}</div>
+                    <div className="truncate text-[11px] text-muted-foreground">{p.product}</div>
+                  </div>
+                </div>
+                <span className={cn("shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-medium tabular-nums", trialBucketMeta[p.b.key].chip)}>{p.days}d</span>
+              </div>
+              <div className="mt-2.5 flex items-center justify-between text-xs">
+                <span className={cn("inline-flex items-center gap-1.5", p.engaged === false ? "text-red-400" : "text-muted-foreground")}>
+                  <span className={cn("size-1.5 rounded-full", e.dot)} />{e.label}
+                </span>
+                <span className="font-medium tabular-nums text-foreground">{BRL(p.priceCents / 100)}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <GradientCTA label="Ação por janela de urgência · opt-in" />
+    </TrialFrame>
+  );
+}
+
+/* ── T3 — Funil de urgência ─────────────────────────────────────────── */
+function TR3Funnel() {
+  const max = Math.max(...trialBuckets.map((b) => b.count));
+  return (
+    <TrialFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Trials por janela de expiração</p>
+      <div className="mt-2 flex items-end gap-2">
+        <span className="gradient-text text-4xl font-bold tracking-tight">{trialResultCount}</span>
+        <span className="mb-1 text-sm text-muted-foreground">acabam em ≤14d · de {trialTotalActive} ativos</span>
+      </div>
+      <div className="mt-5 flex flex-col gap-3">
+        {trialBuckets.map((b) => (
+          <div key={b.key}>
+            <div className="mb-1 flex items-center justify-between gap-2 text-sm">
+              <span className="flex items-center gap-2"><span>{b.emoji}</span><span className="text-foreground">{b.label}</span></span>
+              <span className="tabular-nums text-muted-foreground">{b.count}</span>
+            </div>
+            <div className="h-2.5 overflow-hidden rounded-full bg-muted">
+              <div className={cn("h-full rounded-full", trialBucketMeta[b.key].bar)} style={{ width: `${(b.count / max) * 100}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-5 flex items-center gap-3 rounded-xl border border-red-500/30 bg-red-500/[0.06] p-3">
+        <AlertTriangle className="size-4 shrink-0 text-red-400" />
+        <p className="text-xs leading-relaxed text-foreground">
+          <span className="font-semibold text-red-400">{trialLowEng3d} dos {trialBuckets[0].count}</span> que acabam em 3 dias quase não logaram — evaporam se ninguém falar hoje.
+        </p>
+      </div>
+      <GradientCTA label="Priorizar resgate de hoje · opt-in" />
+    </TrialFrame>
+  );
+}
+
+/* ── T4 — Tabela ────────────────────────────────────────────────────── */
+function TR4Table() {
+  const flat = trialBuckets.flatMap((b) => sortByEngagement(b.people).map((p) => ({ ...p, b }))).sort((a, b) => a.days - b.days);
+  return (
+    <TrialFrame>
+      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-2">
+        <span className="gradient-text text-2xl font-bold">{trialResultCount} trials</span>
+        <span className="text-xs text-muted-foreground">acabando em ≤14d · {trialTotalActive} ativos</span>
+      </div>
+      <div className="overflow-x-auto rounded-lg border border-border">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
+              <th className="px-3 py-2 font-medium">Pessoa</th>
+              <th className="px-3 py-2 font-medium">Acaba</th>
+              <th className="px-3 py-2 font-medium">Engajamento</th>
+              <th className="px-3 py-2 text-right font-medium">Valor</th>
+            </tr>
+          </thead>
+          <tbody>
+            {flat.map((p) => {
+              const e = engMeta(p.engaged);
+              return (
+                <tr key={p.email} className={cn("border-b border-border last:border-0 hover:bg-accent/40", p.b.key === "3d" && "bg-red-500/[0.04]")}>
+                  <td className="px-3 py-2">
+                    <div className="font-medium text-foreground">{p.name}</div>
+                    <div className="text-xs text-muted-foreground">{p.product}</div>
+                  </td>
+                  <td className="px-3 py-2">
+                    <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium tabular-nums", trialBucketMeta[p.b.key].chip)}>
+                      <span className={cn("size-1.5 rounded-full", trialBucketMeta[p.b.key].dot)} />{p.days}d
+                    </span>
+                  </td>
+                  <td className="px-3 py-2">
+                    <span className={cn("inline-flex items-center gap-1.5 text-xs", p.engaged === false ? "text-red-400" : "text-muted-foreground")}>
+                      <span className={cn("size-1.5 rounded-full", e.dot)} />{e.label}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2 text-right tabular-nums text-foreground">{BRL(p.priceCents / 100)}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <GradientCTA label="Exportar por janela · opt-in" />
+    </TrialFrame>
+  );
+}
+
+/* ── T5 — Métrica hero ──────────────────────────────────────────────── */
+function TR5Metric() {
+  return (
+    <TrialFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Em trial · ainda não pagaram</p>
+      <div className="mt-2 flex items-end gap-2">
+        <span className="gradient-text text-5xl font-bold tracking-tight">{trialTotalActive}</span>
+        <span className="mb-1 text-sm text-muted-foreground">testando agora</span>
+      </div>
+      <p className="mt-1 text-sm text-muted-foreground">{trialResultCount} acabam em ≤14 dias — janela de conversão aberta</p>
+      <div className="mt-5 grid grid-cols-3 gap-3">
+        {trialBuckets.map((b) => (
+          <div key={b.key} className="rounded-xl border border-border bg-card/40 p-3">
+            <div className={cn("text-2xl font-bold tabular-nums", b.key === "3d" ? "text-red-400" : b.key === "7d" ? "text-amber-400" : "text-emerald-400")}>{b.count}</div>
+            <div className="mt-0.5 text-[11px] text-muted-foreground">{b.label.replace("Acabam em ", "")}</div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-3 flex items-center gap-3 rounded-xl border border-red-500/30 bg-red-500/[0.06] p-3">
+        <AlertTriangle className="size-4 shrink-0 text-red-400" />
+        <p className="text-xs leading-relaxed text-foreground">
+          <span className="font-semibold text-red-400">{trialLowEng3d}</span> dos que acabam em 3 dias quase não logaram — prioridade de toque humano hoje.
+        </p>
+      </div>
+      <GradientCTA label="Abrir lista por urgência · opt-in" />
+    </TrialFrame>
+  );
+}
+
+function ExpiringTrialResult() {
+  return (
+    <div className="flex flex-col gap-9">
+      <Variation n={1} title="Por urgência (3 janelas)"><TR1Buckets /></Variation>
+      <Variation n={2} title="Cards por pessoa"><TR2Cards /></Variation>
+      <Variation n={3} title="Funil de urgência"><TR3Funnel /></Variation>
+      <Variation n={4} title="Tabela"><TR4Table /></Variation>
+      <Variation n={5} title="Métrica (hero)"><TR5Metric /></Variation>
+    </div>
+  );
+}
+
 /** Registro: id do componente → componente de resultado. */
 export const resultComponents: Record<string, ComponentType> = {
   "card-declined-recovery-list": CardDeclinedRecoveryResult,
@@ -2948,6 +3236,7 @@ export const resultComponents: Record<string, ComponentType> = {
   "high-value-one-time-non-subscribers": HighValueOneTimeResult,
   "inactive-subscribers-no-member-access": InactiveSubscribersResult,
   "win-back-canceled-then-one-time": WinbackResult,
+  "expiring-trial-not-converted": ExpiringTrialResult,
 };
 
 export function getResultComponent(id: string): ComponentType | undefined {
