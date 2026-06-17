@@ -2691,6 +2691,250 @@ function InactiveSubscribersResult() {
   );
 }
 
+/* ════════════════════════════════════════════════════════════════════════
+   win-back-canceled-then-one-time — cancelou a assinatura e voltou avulso
+   ════════════════════════════════════════════════════════════════════════ */
+
+interface WinbackPerson {
+  name: string;
+  email: string;
+  product: string;
+  plan: string;
+  days: number;
+  count: number;
+  totalCents: number;
+}
+
+const winbackPeople: WinbackPerson[] = [
+  { name: "Lucas Pereira", email: "lucas.p@gmail.com", product: "Workshop de Tráfego", plan: "Clube Pro", days: 8, count: 1, totalCents: 29700 },
+  { name: "Fernanda Dias", email: "fe.dias@outlook.com", product: "Ebook Premium", plan: "Mentoria Anual", days: 14, count: 2, totalCents: 13400 },
+  { name: "Thiago Nunes", email: "thiago.nunes@gmail.com", product: "Curso Express", plan: "Clube Pro", days: 21, count: 1, totalCents: 19700 },
+  { name: "Patrícia Gomes", email: "patricia.g@hotmail.com", product: "Masterclass ao Vivo", plan: "Plano Premium", days: 35, count: 1, totalCents: 39700 },
+  { name: "Bruno Carvalho", email: "bruno.c@gmail.com", product: "Template Pack", plan: "Clube Pro", days: 52, count: 3, totalCents: 14100 },
+];
+
+const winbackCount = 12;
+const winbackCanceledInWindow = 47;
+const winbackRecoveredCents = winbackPeople.reduce((s, p) => s + p.totalCents, 0) + 41800;
+const winbackTools = ["lista_de_assinaturas", "painel_minhas_vendas", "executar"];
+
+/** Velocidade de retorno → temperatura do win-back. */
+function speedMeta(days: number): { label: string; chip: string; dot: string; bar: string } {
+  if (days <= 30) return { label: "quente", chip: "border-brand/40 bg-brand/10 text-brand", dot: "bg-brand", bar: "from-[hsl(186_70%_70%)] to-[hsl(73_90%_62%)]" };
+  if (days <= 45) return { label: "morno", chip: "border-amber-500/30 bg-amber-500/10 text-amber-400", dot: "bg-amber-500", bar: "from-amber-400 to-amber-300" };
+  return { label: "frio", chip: "border-border bg-muted/60 text-muted-foreground", dot: "bg-zinc-500", bar: "from-zinc-500 to-zinc-400" };
+}
+
+function WinbackFrame({ children }: { children: ReactNode }) {
+  return (
+    <ResultFrame orchestration="WIN_BACK_CANCELED_THEN_ONE_TIME" tag="Vendas" tools={winbackTools}>
+      {children}
+    </ResultFrame>
+  );
+}
+
+function WinbackPremise() {
+  return (
+    <p className="text-xs italic leading-relaxed text-muted-foreground">
+      “Cancelaram a assinatura nos últimos 60 dias e voltaram a comprar avulso
+      depois do cancelamento — querem estar com você, só não nesse formato.”
+    </p>
+  );
+}
+
+/* ── W1 — Lista por velocidade de retorno ───────────────────────────── */
+function WB1List() {
+  const sorted = [...winbackPeople].sort((a, b) => a.days - b.days);
+  return (
+    <WinbackFrame>
+      <WinbackPremise />
+      <p className="mt-3 text-sm text-foreground">
+        <span className="font-semibold text-foreground">{winbackCount} pessoas</span> cancelaram a mensalidade e voltaram a comprar avulso
+      </p>
+      <p className="mt-0.5 text-xs text-muted-foreground">47 cancelamentos na janela · ordenado por quem voltou mais rápido</p>
+      <ul className="mt-4 flex flex-col gap-px">
+        {sorted.map((p) => {
+          const s = speedMeta(p.days);
+          return (
+            <li key={p.email} className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-accent/50">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">{initials(p.name)}</span>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-medium text-foreground">{p.name}</div>
+                <div className="truncate text-xs text-muted-foreground">{p.product}{p.count > 1 ? ` · ${p.count} compras` : ""} · cancelou {p.plan}</div>
+              </div>
+              <div className="flex shrink-0 flex-col items-end gap-1">
+                <span className="text-sm font-medium tabular-nums text-foreground">{BRL(p.totalCents / 100)}</span>
+                <span className={cn("rounded-full border px-1.5 py-0.5 text-[10px] font-medium tabular-nums", s.chip)}>voltou em {p.days}d</span>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+      <button type="button" className="mt-1 px-2 text-xs font-medium text-brand hover:underline">+ 7 win-backs</button>
+      <GradientCTA label="Oferta de volta segmentada · opt-in" />
+    </WinbackFrame>
+  );
+}
+
+/* ── W2 — Cards ─────────────────────────────────────────────────────── */
+function WB2Cards() {
+  return (
+    <WinbackFrame>
+      <div className="flex flex-wrap items-baseline gap-2">
+        <span className="gradient-text text-2xl font-bold">{winbackCount}</span>
+        <span className="text-sm text-foreground">win-backs avulsos</span>
+        <span className="text-xs text-muted-foreground">· {BRL(winbackRecoveredCents / 100)} já recomprados</span>
+      </div>
+      <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
+        {winbackPeople.map((p) => {
+          const s = speedMeta(p.days);
+          return (
+            <div key={p.email} className="rounded-xl border border-border bg-card/40 p-3">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">{initials(p.name)}</span>
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-medium text-foreground">{p.name}</div>
+                    <div className="truncate text-[11px] text-muted-foreground">cancelou {p.plan}</div>
+                  </div>
+                </div>
+                <span className={cn("shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-medium", s.chip)}>{s.label}</span>
+              </div>
+              <div className="mt-2.5 flex items-center justify-between text-xs">
+                <span className="truncate text-muted-foreground">{p.product}</span>
+                <span className="shrink-0 font-medium tabular-nums text-foreground">{BRL(p.totalCents / 100)}</span>
+              </div>
+              <div className="mt-1 text-[11px] text-muted-foreground">voltou {p.days} dias após o cancelamento</div>
+            </div>
+          );
+        })}
+      </div>
+      <GradientCTA label="Cupom de retorno por pessoa · opt-in" />
+    </WinbackFrame>
+  );
+}
+
+/* ── W3 — Velocidade de retorno (escala) ────────────────────────────── */
+function WB3Speed() {
+  const sorted = [...winbackPeople].sort((a, b) => a.days - b.days);
+  const maxDays = 60;
+  return (
+    <WinbackFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Dias do cancelamento até voltar</p>
+      <p className="mt-1 text-xs text-muted-foreground">Quanto mais rápido voltou, mais quente o candidato a reassinar</p>
+      <div className="mt-4 flex flex-col gap-3.5">
+        {sorted.map((p) => {
+          const s = speedMeta(p.days);
+          return (
+            <div key={p.email}>
+              <div className="mb-1 flex items-center justify-between gap-2 text-sm">
+                <span className="truncate font-medium text-foreground">{p.name}</span>
+                <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{p.days}d · {BRL(p.totalCents / 100)}</span>
+              </div>
+              <div className="relative h-2 overflow-hidden rounded-full bg-muted">
+                <div className={cn("h-full rounded-full bg-gradient-to-r", s.bar)} style={{ width: `${Math.max(6, (1 - p.days / maxDays) * 100)}%` }} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5 text-[11px] text-muted-foreground">
+        <span className="inline-flex items-center gap-1.5"><span className="size-2.5 rounded-[3px] bg-brand" />≤30d quente</span>
+        <span className="inline-flex items-center gap-1.5"><span className="size-2.5 rounded-[3px] bg-amber-500" />31–45d morno</span>
+        <span className="inline-flex items-center gap-1.5"><span className="size-2.5 rounded-[3px] bg-zinc-500" />45d+ frio</span>
+      </div>
+      <GradientCTA label="Priorizar os mais quentes · opt-in" />
+    </WinbackFrame>
+  );
+}
+
+/* ── W4 — Tabela ────────────────────────────────────────────────────── */
+function WB4Table() {
+  const sorted = [...winbackPeople].sort((a, b) => a.days - b.days);
+  return (
+    <WinbackFrame>
+      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-2">
+        <span className="gradient-text text-2xl font-bold">{winbackCount} win-backs</span>
+        <span className="text-xs text-muted-foreground">47 cancelados · 89 compras avulsas no período</span>
+      </div>
+      <div className="overflow-x-auto rounded-lg border border-border">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
+              <th className="px-3 py-2 font-medium">Pessoa</th>
+              <th className="px-3 py-2 font-medium">Voltou em</th>
+              <th className="px-3 py-2 text-center font-medium">Compras</th>
+              <th className="px-3 py-2 text-right font-medium">Recomprado</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sorted.map((p) => {
+              const s = speedMeta(p.days);
+              return (
+                <tr key={p.email} className="border-b border-border last:border-0 hover:bg-accent/40">
+                  <td className="px-3 py-2">
+                    <div className="font-medium text-foreground">{p.name}</div>
+                    <div className="text-xs text-muted-foreground">{p.product}</div>
+                  </td>
+                  <td className="px-3 py-2">
+                    <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium tabular-nums", s.chip)}>
+                      <span className={cn("size-1.5 rounded-full", s.dot)} />{p.days}d
+                    </span>
+                  </td>
+                  <td className="px-3 py-2 text-center tabular-nums text-muted-foreground">{p.count}</td>
+                  <td className="px-3 py-2 text-right tabular-nums text-foreground">{BRL(p.totalCents / 100)}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <GradientCTA label="Exportar candidatos a win-back · opt-in" />
+    </WinbackFrame>
+  );
+}
+
+/* ── W5 — Métrica recuperada (hero) ─────────────────────────────────── */
+function WB5Metric() {
+  const hot = winbackPeople.filter((p) => p.days <= 30).length;
+  return (
+    <WinbackFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Já recomprado avulso pós-cancelamento</p>
+      <div className="mt-2">
+        <span className="gradient-text text-5xl font-bold tracking-tight">{BRL(winbackRecoveredCents / 100)}</span>
+      </div>
+      <p className="mt-1 text-sm text-muted-foreground">de {winbackCount} ex-assinantes que voltaram a comprar solto</p>
+      <div className="mt-5 grid grid-cols-3 gap-3">
+        <div className="rounded-xl border border-border bg-card/40 p-3">
+          <div className="text-2xl font-bold tabular-nums text-brand">{hot}+</div>
+          <div className="mt-0.5 text-[11px] text-muted-foreground">voltaram em ≤30d</div>
+        </div>
+        <div className="rounded-xl border border-border bg-card/40 p-3">
+          <div className="text-2xl font-bold tabular-nums text-foreground">{winbackCanceledInWindow}</div>
+          <div className="mt-0.5 text-[11px] text-muted-foreground">cancelaram na janela</div>
+        </div>
+        <div className="rounded-xl border border-border bg-card/40 p-3">
+          <div className="text-2xl font-bold tabular-nums text-foreground">{Math.round((winbackCount / winbackCanceledInWindow) * 100)}%</div>
+          <div className="mt-0.5 text-[11px] text-muted-foreground">já voltaram solto</div>
+        </div>
+      </div>
+      <GradientCTA label="Converter avulso → assinatura · opt-in" />
+    </WinbackFrame>
+  );
+}
+
+function WinbackResult() {
+  return (
+    <div className="flex flex-col gap-9">
+      <Variation n={1} title="Por velocidade de retorno"><WB1List /></Variation>
+      <Variation n={2} title="Cards por pessoa"><WB2Cards /></Variation>
+      <Variation n={3} title="Escala de dias até voltar"><WB3Speed /></Variation>
+      <Variation n={4} title="Tabela"><WB4Table /></Variation>
+      <Variation n={5} title="Valor recuperado (hero)"><WB5Metric /></Variation>
+    </div>
+  );
+}
+
 /** Registro: id do componente → componente de resultado. */
 export const resultComponents: Record<string, ComponentType> = {
   "card-declined-recovery-list": CardDeclinedRecoveryResult,
@@ -2703,6 +2947,7 @@ export const resultComponents: Record<string, ComponentType> = {
   "ticket-band-upsell-recommendation": TicketBandUpsellResult,
   "high-value-one-time-non-subscribers": HighValueOneTimeResult,
   "inactive-subscribers-no-member-access": InactiveSubscribersResult,
+  "win-back-canceled-then-one-time": WinbackResult,
 };
 
 export function getResultComponent(id: string): ComponentType | undefined {

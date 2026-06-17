@@ -12,6 +12,7 @@ import concluinteCursoSemCompra from "@/content/playbooks/analise/concluinte-do-
 import recomendacaoVendaIngressos from "@/content/playbooks/analise/recomendacao-venda-adicional-ingressos.md?raw";
 import naoAssinantesAltoValor from "@/content/playbooks/analise/nao-assinantes-alto-valor-uma-vez.md?raw";
 import assinantesInativosSemAcesso from "@/content/playbooks/analise/assinantes-inativos-sem-acesso.md?raw";
+import assinanteInativoComprou from "@/content/playbooks/analise/assinante-inativo-comprou-uma-unica-vez.md?raw";
 
 export interface Playbook {
   /** Rótulo do grupo (ex: "Resgate · recuperação de vendas") */
@@ -381,6 +382,39 @@ export const playbooks: Record<string, Playbook> = {
     ],
     body: assinantesInativosSemAcesso,
     resultId: "inactive-subscribers-no-member-access",
+  },
+  "/analise/retencao/assinante-inativo-comprou-uma-unica-vez": {
+    group: "Retenção",
+    groupEmoji: "🩸",
+    agent: "Cassio",
+    title: "assinante inativo comprou uma única vez",
+    summary:
+      "Utilize esta opção quando o usuário solicitar leads de clientes finais que cancelaram recentemente uma assinatura e depois retornaram com uma compra única.",
+    gatilhos: [
+      "cancelou a mensalidade",
+      "voltou a comprar avulso",
+      "cancelou mas continua comprando",
+      "ex-assinante que voltou",
+      "Assinatura cancelada e renovada.",
+      "Cruzado e depois comprado uma única vez",
+      "win-back avulso",
+    ],
+    perguntas: [
+      "Quem cancelou a mensalidade nos últimos 60 dias e voltou a comprar avulso?",
+      "Lista de ex-assinantes que voltaram com compra única — quem voltou mais rápido?",
+      "Cancelou a assinatura mas continua comprando solto — quem são?",
+      "Candidatos a win-back: cancelaram e compraram avulso depois.",
+      "Quanto recuperei de quem cancelou e voltou a comprar avulso?",
+    ],
+    ferramentas: [
+      "lista_de_assinaturas",
+      "assinaturas_obter",
+      "painel_minhas_vendas",
+      "pergunta",
+      "executar",
+    ],
+    body: assinanteInativoComprou,
+    resultId: "win-back-canceled-then-one-time",
   },
 };
 
