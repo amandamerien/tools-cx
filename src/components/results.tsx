@@ -4002,6 +4002,260 @@ function ProposalsResult() {
   );
 }
 
+/* ════════════════════════════════════════════════════════════════════════
+   gold-leads-high-ticket-agenda — leads-ouro pra lotar a agenda do closer
+   ════════════════════════════════════════════════════════════════════════ */
+
+interface GoldLead {
+  name: string;
+  phone: string;
+  score: number;
+  incomeRaw: string;
+  paidCents: number;
+}
+
+const goldLeads: GoldLead[] = [
+  { name: "Ana Beatriz", phone: "(11) 99812-4471", score: 95, incomeRaw: "R$ 20.000 – R$ 30.000", paidCents: 1290000 },
+  { name: "Roberto Khoury", phone: "(21) 98123-9920", score: 92, incomeRaw: "acima de 15k", paidCents: 0 },
+  { name: "Camila Ferraz", phone: "(11) 99654-1180", score: 90, incomeRaw: "R$ 40.000+", paidCents: 4970000 },
+  { name: "Marcelo Tanaka", phone: "(41) 99201-3345", score: 88, incomeRaw: "R$ 15.000 – R$ 20.000", paidCents: 0 },
+  { name: "Letícia Prado", phone: "(31) 98876-5521", score: 85, incomeRaw: "R$ 22.000/mês", paidCents: 597000 },
+  { name: "Henrique Vasco", phone: "(11) 99443-7762", score: 82, incomeRaw: "30k", paidCents: 0 },
+  { name: "Juliana Mattos", phone: "(51) 99120-8834", score: 78, incomeRaw: "entre 15 e 20 mil", paidCents: 0 },
+].sort((a, b) => b.score - a.score || b.paidCents - a.paidCents);
+
+const goldFunnel = { highScore: 142, incomeQualified: 28, withCloser: 11 };
+const goldResultCount = 17;
+const goldCustomers = goldLeads.filter((l) => l.paidCents > 0).length;
+const goldTools = ["esquema_de_filtro_de_leads", "leads_search", "leads_pagamentos"];
+
+function GoldFrame({ children }: { children: ReactNode }) {
+  return (
+    <ResultFrame orchestration="GOLD_LEADS_HIGH_TICKET_AGENDA" tag="Comercial" tools={goldTools}>
+      {children}
+    </ResultFrame>
+  );
+}
+
+function GoldPremise() {
+  return (
+    <p className="text-xs italic leading-relaxed text-muted-foreground">
+      “Score ≥ 70 e renda declarada ≥ R$ 15.000/mês, sem nenhum card aberto em
+      pipeline — ou seja, sem closer agendado. Renda lida do seu campo customizado.”
+    </p>
+  );
+}
+
+/** Linha-funil de contexto (citada uma vez). */
+function GoldFunnelLine() {
+  return (
+    <p className="text-xs text-muted-foreground">
+      De {goldFunnel.highScore} com score alto · {goldFunnel.incomeQualified} declararam renda ≥ R$ 15k · {goldFunnel.withCloser} já com closer · <span className="font-medium text-foreground">{goldResultCount} livres pra agenda</span>
+    </p>
+  );
+}
+
+function CustomerChip() {
+  return (
+    <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-brand/40 bg-brand/10 px-1.5 py-0.5 text-[10px] font-medium text-brand">
+      <Sparkles className="size-2.5" /> já cliente
+    </span>
+  );
+}
+
+/* ── G1 — Lista por score ───────────────────────────────────────────── */
+function GD1List() {
+  return (
+    <GoldFrame>
+      <GoldPremise />
+      <div className="mt-3 flex flex-wrap items-end gap-x-2 gap-y-1">
+        <span className="gradient-text text-4xl font-bold tracking-tight">{goldResultCount}</span>
+        <span className="mb-1 text-base font-medium text-foreground">leads-ouro livres pra agenda</span>
+      </div>
+      <div className="mt-1"><GoldFunnelLine /></div>
+      <ul className="mt-4 flex flex-col gap-px">
+        {goldLeads.map((l) => (
+          <li key={l.phone} className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-accent/50">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">{initials(l.name)}</span>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5">
+                <span className="truncate text-sm font-medium text-foreground">{l.name}</span>
+                {l.paidCents > 0 && <CustomerChip />}
+              </div>
+              <div className="truncate text-xs text-muted-foreground">{l.incomeRaw} · {l.phone}</div>
+            </div>
+            <span className="shrink-0 rounded-md bg-foreground px-1.5 py-0.5 text-xs font-bold tabular-nums text-background">{l.score}</span>
+          </li>
+        ))}
+      </ul>
+      <button type="button" className="mt-1 px-2 text-xs font-medium text-brand hover:underline">+ {goldResultCount - goldLeads.length} leads-ouro</button>
+      <GradientCTA label="Montar agenda dos closers · opt-in" />
+    </GoldFrame>
+  );
+}
+
+/* ── G2 — Cards ─────────────────────────────────────────────────────── */
+function GD2Cards() {
+  return (
+    <GoldFrame>
+      <div className="flex flex-wrap items-baseline gap-2">
+        <span className="gradient-text text-2xl font-bold">{goldResultCount} leads-ouro</span>
+        <span className="text-xs text-muted-foreground">livres · {goldCustomers}+ já foram clientes</span>
+      </div>
+      <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
+        {goldLeads.map((l) => (
+          <div key={l.phone} className={cn("rounded-xl border bg-card/40 p-3", l.paidCents > 0 ? "border-brand/30" : "border-border")}>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">{initials(l.name)}</span>
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-medium text-foreground">{l.name}</div>
+                  <div className="truncate text-[11px] text-muted-foreground">{l.phone}</div>
+                </div>
+              </div>
+              <span className="shrink-0 rounded-md bg-foreground px-1.5 py-0.5 text-xs font-bold tabular-nums text-background">{l.score}</span>
+            </div>
+            <div className="mt-2.5 flex items-center justify-between text-xs">
+              <span className="truncate text-muted-foreground">{l.incomeRaw}</span>
+              {l.paidCents > 0 ? <span className="shrink-0 font-medium text-brand">{BRL(l.paidCents / 100)} pago</span> : <span className="shrink-0 text-muted-foreground">novo</span>}
+            </div>
+          </div>
+        ))}
+      </div>
+      <GradientCTA label="Criar cards no pipeline do closer · opt-in" />
+    </GoldFrame>
+  );
+}
+
+/* ── G3 — Funil de qualificação ─────────────────────────────────────── */
+function GD3Funnel() {
+  const steps = [
+    { label: "Score ≥ 70", value: goldFunnel.highScore, tone: "bg-zinc-500" },
+    { label: "Renda ≥ R$ 15k", value: goldFunnel.incomeQualified, tone: "bg-amber-500" },
+    { label: "Sem closer · ouro", value: goldResultCount, tone: "gradient-brand" },
+  ];
+  const max = steps[0].value;
+  return (
+    <GoldFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Funil de qualificação proativa</p>
+      <div className="mt-2 flex items-end gap-2">
+        <span className="gradient-text text-4xl font-bold tracking-tight">{goldResultCount}</span>
+        <span className="mb-1 text-sm text-muted-foreground">leads-ouro chegaram ao fim do funil</span>
+      </div>
+      <div className="mt-5 flex flex-col gap-2.5">
+        {steps.map((s, i) => (
+          <div key={s.label}>
+            <div className="mb-1 flex items-center justify-between gap-2 text-sm">
+              <span className="text-foreground">{s.label}</span>
+              <span className="text-xs tabular-nums text-muted-foreground">{s.value}{i > 0 && <span className="ml-1 opacity-70">({Math.round((s.value / max) * 100)}%)</span>}</span>
+            </div>
+            <div className="h-3 overflow-hidden rounded-full bg-muted">
+              <div className={cn("h-full rounded-full", s.tone)} style={{ width: `${(s.value / max) * 100}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="mt-4 text-xs leading-relaxed text-muted-foreground">{goldFunnel.withCloser} dos {goldFunnel.incomeQualified} qualificados já estavam com closer — saíram da lista.</p>
+      <GradientCTA label={`Abrir os ${goldResultCount} livres · opt-in`} />
+    </GoldFrame>
+  );
+}
+
+/* ── G4 — Tabela ────────────────────────────────────────────────────── */
+function GD4Table() {
+  return (
+    <GoldFrame>
+      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-2">
+        <span className="gradient-text text-2xl font-bold">{goldResultCount} leads-ouro</span>
+        <span className="text-xs text-muted-foreground">de {goldFunnel.incomeQualified} qualificados por renda</span>
+      </div>
+      <div className="overflow-x-auto rounded-lg border border-border">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
+              <th className="px-3 py-2 font-medium">Lead</th>
+              <th className="px-3 py-2 text-center font-medium">Score</th>
+              <th className="px-3 py-2 font-medium">Renda declarada</th>
+              <th className="px-3 py-2 text-right font-medium">Já pagou</th>
+            </tr>
+          </thead>
+          <tbody>
+            {goldLeads.map((l) => (
+              <tr key={l.phone} className={cn("border-b border-border last:border-0 hover:bg-accent/40", l.paidCents > 0 && "bg-brand/[0.04]")}>
+                <td className="px-3 py-2">
+                  <div className="flex items-center gap-1.5 font-medium text-foreground">{l.name}{l.paidCents > 0 && <CustomerChip />}</div>
+                  <div className="text-xs text-muted-foreground">{l.phone}</div>
+                </td>
+                <td className="px-3 py-2 text-center"><span className="rounded-md border border-border px-1.5 py-0.5 text-xs font-semibold tabular-nums text-foreground">{l.score}</span></td>
+                <td className="px-3 py-2 text-xs text-muted-foreground">{l.incomeRaw}</td>
+                <td className={cn("px-3 py-2 text-right tabular-nums", l.paidCents > 0 ? "font-medium text-brand" : "text-muted-foreground")}>{l.paidCents > 0 ? BRL(l.paidCents / 100) : "—"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <GradientCTA label="Exportar pra agenda · opt-in" />
+    </GoldFrame>
+  );
+}
+
+/* ── G5 — Ouro do ouro (hero) ───────────────────────────────────────── */
+function GD5Hero() {
+  const topCustomer = goldLeads.filter((l) => l.paidCents > 0).sort((a, b) => b.paidCents - a.paidCents)[0];
+  return (
+    <GoldFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Ouro do ouro · já cliente</p>
+      <div className="mt-2 flex items-end gap-2">
+        <span className="gradient-text text-5xl font-bold tracking-tight">{goldCustomers}</span>
+        <span className="mb-1 text-sm text-muted-foreground">dos {goldResultCount} leads-ouro já compraram antes</span>
+      </div>
+      <div className="mt-5 rounded-xl border border-brand/30 bg-brand/[0.05] p-3">
+        <div className="flex items-center gap-3">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-medium text-foreground">{initials(topCustomer.name)}</span>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5">
+              <span className="truncate text-base font-semibold text-foreground">{topCustomer.name}</span>
+              <span className="shrink-0 rounded-md bg-foreground px-1.5 py-0.5 text-xs font-bold tabular-nums text-background">{topCustomer.score}</span>
+            </div>
+            <div className="text-xs text-muted-foreground">{topCustomer.incomeRaw} · {topCustomer.phone}</div>
+          </div>
+          <div className="shrink-0 text-right">
+            <div className="text-lg font-bold tabular-nums text-brand">{BRL(topCustomer.paidCents / 100)}</div>
+            <div className="text-[10px] text-muted-foreground">já pago</div>
+          </div>
+        </div>
+      </div>
+      <div className="mt-3 grid grid-cols-3 gap-3">
+        <div className="rounded-xl border border-border bg-card/40 p-3">
+          <div className="text-2xl font-bold tabular-nums text-foreground">{goldFunnel.highScore}</div>
+          <div className="mt-0.5 text-[11px] text-muted-foreground">score alto</div>
+        </div>
+        <div className="rounded-xl border border-border bg-card/40 p-3">
+          <div className="text-2xl font-bold tabular-nums text-foreground">{goldFunnel.incomeQualified}</div>
+          <div className="mt-0.5 text-[11px] text-muted-foreground">renda ≥ 15k</div>
+        </div>
+        <div className="rounded-xl border border-border bg-card/40 p-3">
+          <div className="gradient-text text-2xl font-bold tabular-nums">{goldResultCount}</div>
+          <div className="mt-0.5 text-[11px] text-muted-foreground">livres pra agenda</div>
+        </div>
+      </div>
+      <GradientCTA label="Priorizar os já clientes · opt-in" />
+    </GoldFrame>
+  );
+}
+
+function GoldLeadsResult() {
+  return (
+    <div className="flex flex-col gap-9">
+      <Variation n={1} title="Por score"><GD1List /></Variation>
+      <Variation n={2} title="Cards por lead"><GD2Cards /></Variation>
+      <Variation n={3} title="Funil de qualificação"><GD3Funnel /></Variation>
+      <Variation n={4} title="Tabela"><GD4Table /></Variation>
+      <Variation n={5} title="Ouro do ouro (hero)"><GD5Hero /></Variation>
+    </div>
+  );
+}
+
 /** Registro: id do componente → componente de resultado. */
 export const resultComponents: Record<string, ComponentType> = {
   "card-declined-recovery-list": CardDeclinedRecoveryResult,
@@ -4019,6 +4273,7 @@ export const resultComponents: Record<string, ComponentType> = {
   "missed-meeting-not-rescheduled": MissedMeetingResult,
   "hot-leads-no-recent-contact": HotLeadsResult,
   "proposals-sent-no-follow-up": ProposalsResult,
+  "gold-leads-high-ticket-agenda": GoldLeadsResult,
 };
 
 export function getResultComponent(id: string): ComponentType | undefined {

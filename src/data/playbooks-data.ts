@@ -17,6 +17,7 @@ import julgamentoFinalNaoConvertido from "@/content/playbooks/analise/julgamento
 import reuniaoFaltadaNaoRemarcada from "@/content/playbooks/analise/reuniao-faltada-nao-remarcada.md?raw";
 import leadsQuentesSemContato from "@/content/playbooks/analise/leads-quentes-sem-contato-recente.md?raw";
 import propostasEnviadasSemAcompanhamento from "@/content/playbooks/analise/propostas-enviadas-sem-acompanhamento.md?raw";
+import ouroLideraAgenda from "@/content/playbooks/analise/ouro-lidera-agenda-de-alto-valor.md?raw";
 
 export interface Playbook {
   /** Rótulo do grupo (ex: "Resgate · recuperação de vendas") */
@@ -553,6 +554,41 @@ export const playbooks: Record<string, Playbook> = {
     ],
     body: propostasEnviadasSemAcompanhamento,
     resultId: "proposals-sent-no-follow-up",
+  },
+  "/analise/comercial-agenda-e-pipeline/ouro-lidera-agenda-de-alto-valor": {
+    group: "Comercial · agenda e pipeline",
+    groupEmoji: "📞",
+    agent: "Vinícius + Lara",
+    title: "ouro lidera agenda de alto valor",
+    summary:
+      "Utilize esta ferramenta quando o usuário solicitar leads qualificados — pontuação alta e renda declarada acima de um determinado limite — sem agendamento de fechamento de negócio, para preencher a agenda de vendas.",
+    gatilhos: [
+      "leads-ouro",
+      "leads qualificados pra fechar",
+      "renda declarada acima de",
+      "lotar a agenda dos closers",
+      "quem agendar com o closer essa semana",
+      "lucros de ouro",
+      "Leads de alta renda",
+      "preencher a agenda de vendas",
+    ],
+    perguntas: [
+      "Quais leads-ouro (score alto + renda ≥ 15k) ainda não têm closer agendado?",
+      "Quero lotar a agenda dos closers essa semana — quem qualifica?",
+      "Leads de alta renda sem ninguém do comercial em cima: quem são?",
+      "Dos leads-ouro, quais já foram clientes? Quero priorizar high-ticket.",
+      "Lista pra agenda de fechamento: nome, score, renda e telefone.",
+    ],
+    ferramentas: [
+      "esquema_de_filtro_de_leads",
+      "leads_search",
+      "lista_de_cartões_por_lead",
+      "leads_pagamentos",
+      "pergunta",
+      "executar",
+    ],
+    body: ouroLideraAgenda,
+    resultId: "gold-leads-high-ticket-agenda",
   },
 };
 
