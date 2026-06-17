@@ -23,6 +23,7 @@ export function DocPage() {
   const isAreaRoot = trail.length === 0;
   const current = trail.length > 0 ? trail[trail.length - 1] : null;
   const title = current?.title ?? section.label;
+  const SectionIcon = section.icon;
 
   // Página de domínio de tools (ex: /tools/crm) → lista de tools.
   const domain =
@@ -40,7 +41,7 @@ export function DocPage() {
       {/* Breadcrumb */}
       <nav className="mb-3 flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
         <span className="inline-flex items-center gap-1.5">
-          <span>{section.emoji}</span>
+          <SectionIcon className="size-3.5 shrink-0" strokeWidth={2} />
           {section.label}
         </span>
         {trail.map((node, i) => (
@@ -60,7 +61,7 @@ export function DocPage() {
       ) : (
         <>
           <h1 className="flex items-center gap-2.5 text-3xl font-bold tracking-tight text-foreground">
-            {isAreaRoot && <span>{section.emoji}</span>}
+            {isAreaRoot && <SectionIcon className="size-7 shrink-0 text-brand" strokeWidth={2} />}
             <span>{title}</span>
             {domain && (
               <span className="rounded-full border border-brand/30 bg-brand-muted px-2.5 py-0.5 text-xs font-medium text-brand">

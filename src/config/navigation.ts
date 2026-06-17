@@ -5,6 +5,23 @@ import {
   Puzzle,
   NotebookPen,
   Landmark,
+  CreditCard,
+  TrendingUp,
+  HeartPulse,
+  PhoneCall,
+  RefreshCw,
+  LineChart,
+  Flame,
+  Sparkles,
+  Gem,
+  Tag,
+  Filter,
+  Megaphone,
+  Wand2,
+  Package,
+  Stethoscope,
+  Target,
+  Handshake,
   type LucideIcon,
 } from "lucide-react";
 
@@ -14,6 +31,8 @@ export interface NavNode {
   title: string;
   /** Emoji opcional (grupos costumam ter) */
   emoji?: string;
+  /** Ícone de linha (estilo MyIcons) — preferido sobre o emoji quando presente */
+  icon?: LucideIcon;
   /** Contagem opcional (badge) */
   count?: number;
   /** Rota — preenchida automaticamente para folhas */
@@ -93,6 +112,7 @@ export const navigation: NavSection[] = [
       {
         title: "Resgate · recuperação de vendas",
         emoji: "💳",
+        icon: CreditCard,
         count: 5,
         children: [
           { title: "lista de recuperação de cartão" },
@@ -105,6 +125,7 @@ export const navigation: NavSection[] = [
       {
         title: "Esteira · subir de ticket",
         emoji: "🎯",
+        icon: TrendingUp,
         count: 4,
         children: [
           { title: "prontidão para vendas adicionais de baixo custo" },
@@ -116,6 +137,7 @@ export const navigation: NavSection[] = [
       {
         title: "Retenção",
         emoji: "🩸",
+        icon: HeartPulse,
         count: 3,
         children: [
           { title: "assinantes inativos sem acesso" },
@@ -126,6 +148,7 @@ export const navigation: NavSection[] = [
       {
         title: "Comercial · agenda e pipeline",
         emoji: "📞",
+        icon: PhoneCall,
         count: 4,
         children: [
           { title: "reunião faltada não remarcada" },
@@ -137,6 +160,7 @@ export const navigation: NavSection[] = [
       {
         title: "Reativação",
         emoji: "🔄",
+        icon: RefreshCw,
         count: 2,
         children: [
           { title: "clientes inativos ainda abrem e-mails" },
@@ -146,6 +170,7 @@ export const navigation: NavSection[] = [
       {
         title: "Investimento · onde colocar verba",
         emoji: "📈",
+        icon: LineChart,
         count: 2,
         children: [
           { title: "decisão de escala de campanha" },
@@ -155,12 +180,14 @@ export const navigation: NavSection[] = [
       {
         title: "Orquestrador · resumo da semana",
         emoji: "🔥",
+        icon: Flame,
         count: 1,
         children: [{ title: "resumo semanal do dinheiro oculto" }],
       },
       {
         title: "Novos · proatividade e atendimento",
         emoji: "✨",
+        icon: Sparkles,
         count: 2,
         children: [
           { title: "descoberta de padrões de campos personalizados" },
@@ -181,6 +208,7 @@ export const navigation: NavSection[] = [
       {
         title: "Fundação",
         emoji: "💠",
+        icon: Gem,
         count: 3,
         children: [
           { title: "definição de avatar furion" },
@@ -191,6 +219,7 @@ export const navigation: NavSection[] = [
       {
         title: "Ofertas",
         emoji: "💎",
+        icon: Tag,
         count: 4,
         children: [
           { title: "criação de oferta furion" },
@@ -202,6 +231,7 @@ export const navigation: NavSection[] = [
       {
         title: "Funis e esteira",
         emoji: "🏛️",
+        icon: Filter,
         count: 3,
         children: [
           { title: "design de sequência de ofertas" },
@@ -212,6 +242,7 @@ export const navigation: NavSection[] = [
       {
         title: "Páginas, mensagens e anúncios",
         emoji: "📣",
+        icon: Megaphone,
         count: 3,
         children: [
           { title: "furion-page-section-blueprint" },
@@ -222,6 +253,7 @@ export const navigation: NavSection[] = [
       {
         title: "Orquestrador de ativação",
         emoji: "😎",
+        icon: Wand2,
         count: 1,
         children: [{ title: "orquestrador de ativação do furion" }],
       },
@@ -270,6 +302,7 @@ export const navigation: NavSection[] = [
       {
         title: "Pacotes de frente",
         emoji: "📦",
+        icon: Package,
         count: 4,
         children: [
           { title: "bilhon-os-pacote-f1-low-ticket" },
@@ -281,6 +314,7 @@ export const navigation: NavSection[] = [
       {
         title: "Diagnóstico",
         emoji: "🩺",
+        icon: Stethoscope,
         count: 3,
         children: [
           { title: "bilhon-os-recomendador-de-pacote" },
@@ -291,6 +325,7 @@ export const navigation: NavSection[] = [
       {
         title: "Método e portfólio",
         emoji: "🎯",
+        icon: Target,
         count: 3,
         children: [
           { title: "bilhon-os-sistema-90-dias" },
@@ -301,6 +336,7 @@ export const navigation: NavSection[] = [
       {
         title: "Comercial",
         emoji: "🤝",
+        icon: Handshake,
         count: 2,
         children: [
           { title: "bilhon-os-objecoes-e-fechamento" },

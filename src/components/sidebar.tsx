@@ -75,6 +75,7 @@ function SectionRow({
     pathname === section.href ||
     section.children.some((c) => containsPath(c, pathname));
   const [open, setOpen] = useState(active);
+  const Icon = section.icon;
 
   useEffect(() => {
     if (active) setOpen(true);
@@ -100,7 +101,13 @@ function SectionRow({
               : "text-muted-foreground group-hover:text-sidebar-accent-foreground",
           )}
         >
-          <span className="text-base leading-none">{section.emoji}</span>
+          <Icon
+            className={cn(
+              "size-4 shrink-0 transition-colors",
+              active ? "text-brand" : "text-muted-foreground group-hover:text-foreground",
+            )}
+            strokeWidth={2}
+          />
           <span className="truncate">{section.label}</span>
         </NavLink>
         {section.count != null && <CountBadge value={section.count} />}
@@ -160,9 +167,7 @@ function TreeNode({
           }
           style={{ paddingLeft: `${depth * 0.5 + 0.25}rem` }}
         >
-          {node.emoji && (
-            <span className="shrink-0 text-sm leading-none">{node.emoji}</span>
-          )}
+          <NodeIcon node={node} />
           <span className="truncate">{node.title}</span>
           {node.count != null && <CountBadge value={node.count} />}
         </NavLink>
@@ -190,9 +195,7 @@ function TreeNode({
             open && "rotate-90",
           )}
         />
-        {node.emoji && (
-          <span className="shrink-0 text-sm leading-none">{node.emoji}</span>
-        )}
+        <NodeIcon node={node} />
         <span className="truncate text-left">{node.title}</span>
         {node.count != null && <CountBadge value={node.count} />}
       </button>
@@ -211,6 +214,18 @@ function TreeNode({
       )}
     </li>
   );
+}
+
+/** Ícone de linha (estilo MyIcons) do nó; cai pro emoji legado se não houver. */
+function NodeIcon({ node }: { node: NavNode }) {
+  if (node.icon) {
+    const Icon = node.icon;
+    return <Icon className="size-3.5 shrink-0" strokeWidth={2} />;
+  }
+  if (node.emoji) {
+    return <span className="shrink-0 text-sm leading-none">{node.emoji}</span>;
+  }
+  return null;
 }
 
 function ExpandToggle({
