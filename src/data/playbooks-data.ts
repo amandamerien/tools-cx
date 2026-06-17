@@ -6,6 +6,7 @@ import listaRecuperacaoCartao from "@/content/playbooks/analise/lista-de-recuper
 import boletoPendentePixPorDia from "@/content/playbooks/analise/boleto-pendente-pix-por-dia.md?raw";
 import abandonoCarrinhoPorProduto from "@/content/playbooks/analise/abandono-de-carrinho-por-produto.md?raw";
 import compraCanceladaNaoDevolvida from "@/content/playbooks/analise/compra-cancelada-nao-devolvida.md?raw";
+import renovacaoAssinaturaFalhada from "@/content/playbooks/analise/renovacao-da-assinatura-falhada.md?raw";
 
 export interface Playbook {
   /** Rótulo do grupo (ex: "Resgate · recuperação de vendas") */
@@ -159,6 +160,41 @@ export const playbooks: Record<string, Playbook> = {
     ],
     body: compraCanceladaNaoDevolvida,
     resultId: "canceled-purchase-not-returned",
+  },
+
+  "/analise/resgate-recuperacao-de-vendas/renovacao-da-assinatura-falhada": {
+    group: "Resgate · recuperação de vendas",
+    groupEmoji: "💳",
+    agent: "Rebeca",
+    title: "renovação—da—assinatura—falhou",
+    summary:
+      "Utilizar quando o utilizador solicita os subscritores ativos cuja última cobrança recorrente falhou, separando-os por causa da falha (cartão expirado, sem saldo, cartão bloqueado).",
+    gatilhos: [
+      "falha na cobrança da mensalidade",
+      "mensalidade falhou",
+      "renovação falhou",
+      "cartão expirado",
+      "inadimplente",
+      "Falha na cobrança da assinatura",
+      "agitação silenciosa",
+    ],
+    perguntas: [
+      "Quem teve falha na cobrança da mensalidade no último ciclo?",
+      "Lista de assinantes ativos cuja renovação falhou — separa por causa.",
+      "Quais assinaturas não renovaram por cartão expirado / sem saldo / bloqueado?",
+      "Quanto de MRR tá vazando com renovação falhando? Me mostra quem.",
+      "Inadimplentes da recorrência dos últimos 35 dias que ainda não cancelaram.",
+    ],
+    ferramentas: [
+      "painel_minhas_vendas",
+      "lista_de_assinaturas",
+      "assinaturas_obter",
+      "assinaturas_atualizacao_cartao",
+      "pergunta",
+      "executar",
+    ],
+    body: renovacaoAssinaturaFalhada,
+    resultId: "subscription-renewal-failed",
   },
 };
 

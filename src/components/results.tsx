@@ -1205,12 +1205,287 @@ function CanceledPurchaseResult() {
   );
 }
 
+/* ════════════════════════════════════════════════════════════════════════
+   subscription-renewal-failed — silent churn por causa da falha (MRR em risco)
+   ════════════════════════════════════════════════════════════════════════ */
+
+const causeMeta: Record<string, { chip: string; bar: string; support?: boolean }> = {
+  expirado: { chip: "border-sky-500/30 bg-sky-500/10 text-sky-400", bar: "from-sky-400 to-sky-300" },
+  sem_saldo: { chip: "border-amber-500/30 bg-amber-500/10 text-amber-400", bar: "from-amber-400 to-amber-300" },
+  bloqueado: { chip: "border-red-500/30 bg-red-500/10 text-red-400", bar: "from-red-500 to-red-400", support: true },
+  desconhecido: { chip: "border-border bg-muted/60 text-muted-foreground", bar: "from-zinc-500 to-zinc-400" },
+};
+
+interface Sub {
+  name: string;
+  email: string;
+  product: string;
+  mrr: number;
+  age: string;
+  attempts: number;
+}
+interface CauseGroup {
+  cause: keyof typeof causeMeta;
+  label: string;
+  suggestedPlay: string;
+  count: number;
+  mrrAtRisk: number;
+  hiddenCount: number;
+  subscriptions: Sub[];
+}
+
+const causeGroups: CauseGroup[] = [
+  { cause: "expirado", label: "Cartão expirado", suggestedPlay: "fluxo de atualização de cartão — resolve quase sozinho", count: 9, mrrAtRisk: 1173, hiddenCount: 7, subscriptions: [
+    { name: "Marina Alves", email: "marina.alves@gmail.com", product: "Clube Pro", mrr: 97, age: "há 2d", attempts: 3 },
+    { name: "Diego Martins", email: "diego.m@outlook.com", product: "Mentoria Anual", mrr: 197, age: "há 4d", attempts: 2 },
+  ]},
+  { cause: "sem_saldo", label: "Sem saldo no momento", suggestedPlay: "reagendar a cobrança em 3-5 dias", count: 4, mrrAtRisk: 588, hiddenCount: 2, subscriptions: [
+    { name: "Rafael Souza", email: "rafael.souza@hotmail.com", product: "Clube Pro", mrr: 97, age: "há 1d", attempts: 2 },
+    { name: "Camila Rocha", email: "camila.rocha@gmail.com", product: "Plano Premium", mrr: 197, age: "há 3d", attempts: 1 },
+  ]},
+  { cause: "bloqueado", label: "Cartão bloqueado", suggestedPlay: "CS humano liga — não vira com e-mail", count: 2, mrrAtRisk: 394, hiddenCount: 0, subscriptions: [
+    { name: "Lucas Pereira", email: "lucas.pereira@gmail.com", product: "Mentoria Anual", mrr: 297, age: "há 2d", attempts: 4 },
+    { name: "Bruno Costa", email: "bruno.costa@gmail.com", product: "Clube Pro", mrr: 97, age: "há 5d", attempts: 3 },
+  ]},
+  { cause: "desconhecido", label: "Motivo não mapeado", suggestedPlay: "revisar o motivo do gateway antes de agir", count: 2, mrrAtRisk: 225, hiddenCount: 0, subscriptions: [
+    { name: "Fernanda Dias", email: "fe.dias@gmail.com", product: "Plano Premium", mrr: 97, age: "há 1d", attempts: 1 },
+    { name: "André Luiz", email: "andre.luiz@hotmail.com", product: "Clube Pro", mrr: 128, age: "há 6d", attempts: 2 },
+  ]},
+];
+
+const subTools = ["painel_minhas_vendas", "lista_de_assinaturas", "assinaturas_obter", "executar"];
+
+function SubFrame({ children }: { children: ReactNode }) {
+  return (
+    <ResultFrame orchestration="SUBSCRIPTION_RENEWAL_FAILED" tools={subTools}>
+      {children}
+    </ResultFrame>
+  );
+}
+
+function SubPremise() {
+  return (
+    <p className="text-xs italic leading-relaxed text-muted-foreground">
+      “Cobranças recorrentes com falha (refused/failed) dos últimos 35 dias em
+      assinaturas ativas, excluindo as que recuperaram no retry.”
+    </p>
+  );
+}
+
+function CausePlayChip({ g }: { g: CauseGroup }) {
+  return (
+    <span className={cn("rounded-full border px-2 py-0.5 text-[11px] font-medium", causeMeta[g.cause].chip)}>
+      {g.suggestedPlay}
+    </span>
+  );
+}
+
+/* ── S1 — Grupos por causa ──────────────────────────────────────────── */
+function SV1Groups() {
+  return (
+    <SubFrame>
+      <SubPremise />
+      <div className="mt-3 flex flex-wrap items-end gap-x-2 gap-y-1">
+        <span className="gradient-text text-4xl font-bold tracking-tight">{BRL(2380)}</span>
+        <span className="mb-1 text-base font-medium text-foreground">/mês em risco · 17 assinantes</span>
+      </div>
+      <p className="mt-1 text-xs text-muted-foreground">≈ {BRL(28560)}/ano saindo em silêncio · 5 já recuperaram no retry (removidas)</p>
+      <div className="mt-5 flex flex-col gap-3">
+        {causeGroups.map((g) => {
+          const m = causeMeta[g.cause];
+          return (
+            <div key={g.cause} className={cn("rounded-lg border bg-card/40 p-3.5", m.support ? "border-red-500/30" : "border-border")}>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="flex items-center gap-1.5 font-medium text-foreground">
+                  {m.support && <AlertTriangle className="size-4 text-red-400" />}
+                  {g.label}
+                </span>
+                <CausePlayChip g={g} />
+              </div>
+              <div className="mt-1.5 text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">{g.count} assinaturas</span> · {BRL(g.mrrAtRisk)}/mês
+              </div>
+              <ul className="mt-2 flex flex-col gap-1">
+                {g.subscriptions.slice(0, 2).map((s) => (
+                  <li key={s.email} className="flex items-center justify-between text-xs">
+                    <span className="text-foreground">{s.name} <span className="text-muted-foreground">· {s.product}</span></span>
+                    <span className="text-muted-foreground">{BRL(s.mrr)}/mês · {s.attempts} retries · {s.age}</span>
+                  </li>
+                ))}
+              </ul>
+              {g.hiddenCount > 0 && <div className="mt-1.5 text-xs font-medium text-brand">+ {g.hiddenCount} assinaturas</div>}
+            </div>
+          );
+        })}
+      </div>
+      <GradientCTA label="Atualizar cartão dos expirados · opt-in" />
+    </SubFrame>
+  );
+}
+
+/* ── S2 — Vazamento (MRR hero) ──────────────────────────────────────── */
+function SV2Leak() {
+  return (
+    <SubFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+        MRR vazando em silêncio · 35 dias
+      </p>
+      <div className="mt-2 flex flex-wrap items-end gap-x-3 gap-y-1">
+        <span className="gradient-text text-5xl font-bold tracking-tight">{BRL(2380)}</span>
+        <span className="mb-1.5 text-sm text-muted-foreground">/mês · ≈ {BRL(28560)}/ano</span>
+      </div>
+      <div className="mt-3 rounded-lg border border-border bg-card/40 p-3 text-xs leading-relaxed text-muted-foreground">
+        17 assinantes ativos não foram cobrados. Na maioria <span className="text-foreground">não é a pessoa querendo cancelar — é o cartão que não passou.</span> Sem ação, viram churn em até 30 dias.
+      </div>
+      <div className="mt-4 flex flex-col gap-3">
+        {causeGroups.map((g) => (
+          <div key={g.cause}>
+            <div className="mb-1 flex items-center justify-between gap-2 text-sm">
+              <span className="flex items-center gap-1.5 text-foreground">
+                {causeMeta[g.cause].support && <AlertTriangle className="size-3.5 text-red-400" />}
+                {g.label}
+              </span>
+              <span className="shrink-0 tabular-nums text-muted-foreground">{g.count} · {BRL(g.mrrAtRisk)}/mês</span>
+            </div>
+            <div className="h-2 overflow-hidden rounded-full bg-muted">
+              <div className={cn("h-full rounded-full bg-gradient-to-r", causeMeta[g.cause].bar)} style={{ width: `${(g.mrrAtRisk / 1173) * 100}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <GradientCTA label="Ver assinaturas em risco" />
+    </SubFrame>
+  );
+}
+
+/* ── S3 — Barras por causa ──────────────────────────────────────────── */
+function SV3Bars() {
+  const max = Math.max(...causeGroups.map((g) => g.count));
+  return (
+    <SubFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+        Falhas de renovação por causa · 35 dias
+      </p>
+      <div className="mt-2 flex items-end gap-2">
+        <span className="gradient-text text-5xl font-bold tracking-tight">17</span>
+        <span className="mb-1.5 text-sm text-muted-foreground">assinaturas · {BRL(2380)}/mês</span>
+      </div>
+      <div className="mt-5 flex flex-col gap-4">
+        {causeGroups.map((g) => (
+          <div key={g.cause}>
+            <div className="mb-1.5 flex items-center justify-between gap-2 text-sm">
+              <span className="flex items-center gap-1.5 font-medium text-foreground">
+                {causeMeta[g.cause].support && <AlertTriangle className="size-3.5 text-red-400" />}
+                {g.label}
+              </span>
+              <span className="shrink-0 tabular-nums text-muted-foreground">{g.count} · {BRL(g.mrrAtRisk)}/mês</span>
+            </div>
+            <div className="h-2.5 overflow-hidden rounded-full bg-muted">
+              <div className={cn("h-full rounded-full bg-gradient-to-r", causeMeta[g.cause].bar)} style={{ width: `${(g.count / max) * 100}%` }} />
+            </div>
+            <p className="mt-1 text-[11px] text-muted-foreground">▸ {g.suggestedPlay}</p>
+          </div>
+        ))}
+      </div>
+      <GradientCTA label="Ver assinaturas por causa" />
+    </SubFrame>
+  );
+}
+
+/* ── S4 — Tabela agrupada ───────────────────────────────────────────── */
+function SV4Table() {
+  return (
+    <SubFrame>
+      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-2">
+        <span className="gradient-text text-2xl font-bold">{BRL(2380)}/mês</span>
+        <span className="text-xs text-muted-foreground">17 assinaturas · 4 causas · ≈ {BRL(28560)}/ano</span>
+      </div>
+      <div className="overflow-x-auto rounded-lg border border-border">
+        <table className="w-full text-sm">
+          <tbody>
+            {causeGroups.map((g) => (
+              <Fragment key={g.cause}>
+                <tr className="bg-muted/40">
+                  <td colSpan={2} className="px-3 py-1.5">
+                    <span className="flex flex-wrap items-center gap-2">
+                      {causeMeta[g.cause].support && <AlertTriangle className="size-3.5 text-red-400" />}
+                      <span className="font-medium text-foreground">{g.label}</span>
+                      <span className="text-xs text-muted-foreground">· {g.count} · {BRL(g.mrrAtRisk)}/mês</span>
+                      <CausePlayChip g={g} />
+                    </span>
+                  </td>
+                </tr>
+                {g.subscriptions.map((s) => (
+                  <tr key={s.email} className="border-b border-border last:border-0 hover:bg-accent/40">
+                    <td className="px-3 py-1.5">
+                      <div className="text-foreground">{s.name}</div>
+                      <div className="text-xs text-muted-foreground">{s.email} · {s.product} · {s.attempts} retries</div>
+                    </td>
+                    <td className="px-3 py-1.5 text-right tabular-nums text-foreground">{BRL(s.mrr)}/mês</td>
+                  </tr>
+                ))}
+              </Fragment>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <GradientCTA label="Exportar por causa · opt-in" />
+    </SubFrame>
+  );
+}
+
+/* ── S5 — Métrica + ranking ─────────────────────────────────────────── */
+function SV5Metric() {
+  const max = Math.max(...causeGroups.map((g) => g.mrrAtRisk));
+  return (
+    <SubFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+        Anualização do vazamento · projeção
+      </p>
+      <div className="mt-2">
+        <span className="gradient-text text-5xl font-bold tracking-tight">{BRL(28560)}</span>
+      </div>
+      <p className="mt-1 text-sm text-muted-foreground">/ano se nada for feito · {BRL(2380)}/mês · 17 assinaturas</p>
+      <div className="mt-5 flex flex-col gap-3.5">
+        {causeGroups.map((g) => (
+          <div key={g.cause}>
+            <div className="mb-1 flex items-center justify-between gap-2 text-sm">
+              <span className="flex items-center gap-1.5 text-foreground">
+                {causeMeta[g.cause].support && <AlertTriangle className="size-3.5 text-red-400" />}
+                {g.label}
+              </span>
+              <span className="shrink-0 tabular-nums text-muted-foreground">{BRL(g.mrrAtRisk)}/mês</span>
+            </div>
+            <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+              <div className={cn("h-full rounded-full bg-gradient-to-r", causeMeta[g.cause].bar)} style={{ width: `${(g.mrrAtRisk / max) * 100}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <GradientCTA label="Ver detalhamento por causa" />
+    </SubFrame>
+  );
+}
+
+function SubscriptionRenewalResult() {
+  return (
+    <div className="flex flex-col gap-9">
+      <Variation n={1} title="Grupos por causa"><SV1Groups /></Variation>
+      <Variation n={2} title="Vazamento (MRR hero)"><SV2Leak /></Variation>
+      <Variation n={3} title="Barras por causa"><SV3Bars /></Variation>
+      <Variation n={4} title="Tabela agrupada"><SV4Table /></Variation>
+      <Variation n={5} title="Métrica + ranking"><SV5Metric /></Variation>
+    </div>
+  );
+}
+
 /** Registro: id do componente → componente de resultado. */
 export const resultComponents: Record<string, ComponentType> = {
   "card-declined-recovery-list": CardDeclinedRecoveryResult,
   "pending-pix-boleto-by-day": BoletoPendingByDayResult,
   "checkout-abandonment-by-product": CheckoutAbandonmentResult,
   "canceled-purchase-not-returned": CanceledPurchaseResult,
+  "subscription-renewal-failed": SubscriptionRenewalResult,
 };
 
 export function getResultComponent(id: string): ComponentType | undefined {
