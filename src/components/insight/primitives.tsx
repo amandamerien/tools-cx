@@ -60,13 +60,10 @@ export function InsightCard({
           )}
         >
           {orchestration && (
-            <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3.5">
-              <div className="flex items-center gap-2 font-mono text-[11px]">
-                <span className="relative flex size-2">
-                  <span className={cn("absolute inline-flex size-full animate-ping rounded-full opacity-50", t.dot)} />
-                  <span className={cn("relative inline-flex size-2 rounded-full", t.dot)} />
-                </span>
-                <span className="font-semibold tracking-wide text-foreground">CLICKMAX</span>
+            <div className="flex items-center justify-between gap-3 border-b border-border bg-white/[0.02] px-5 py-3">
+              <div className="flex items-center gap-2 font-mono text-[10.5px] uppercase tracking-[0.04em]">
+                <span className={cn("size-[7px] rounded-full shadow-[0_0_8px_currentColor]", t.dot, t.text)} />
+                <span className="font-semibold text-foreground">ClickMax</span>
                 <span className="text-muted-foreground/80">· {orchestration}</span>
               </div>
               {domain && (
@@ -377,14 +374,10 @@ export function RecommendationCTA({
     <button
       type="button"
       className={cn(
-        "group/cta flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-200 active:scale-[0.99]",
-        variant === "primary" &&
-          tone === "brand" &&
-          "gradient-brand text-black/85 shadow-[0_6px_24px_-8px] shadow-lime-400/40 ring-1 ring-inset ring-white/20 hover:shadow-lime-400/60 hover:brightness-[1.04]",
-        variant === "primary" &&
-          tone !== "brand" &&
-          cn("bg-gradient-to-r text-black/85 ring-1 ring-inset ring-white/20 hover:brightness-[1.04]", t.bar),
-        variant === "soft" && cn("border", t.border, t.bg, t.text, "hover:brightness-110"),
+        "group/cta flex w-full items-center justify-center gap-2 rounded-[11px] px-4 py-3 text-sm font-semibold transition-[filter] duration-200 hover:brightness-[1.03] active:brightness-95",
+        variant === "primary" && tone === "brand" && "gradient-brand text-[hsl(200_40%_10%)]",
+        variant === "primary" && tone !== "brand" && cn("bg-gradient-to-r text-black/85", t.bar),
+        variant === "soft" && cn("border", t.border, t.bg, t.text),
         className,
       )}
       {...props}

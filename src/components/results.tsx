@@ -66,13 +66,10 @@ function ResultFrame({
     <div>
       <div className="dot-frame p-4 sm:p-6">
         <div className="result-surface">
-          <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3.5">
-            <div className="flex items-center gap-2 font-mono text-[11px]">
-              <span className="relative flex size-2">
-                <span className="absolute inline-flex size-full animate-ping rounded-full bg-brand opacity-50" />
-                <span className="relative inline-flex size-2 rounded-full bg-brand" />
-              </span>
-              <span className="font-semibold tracking-wide text-foreground">CLICKMAX</span>
+          <div className="flex items-center justify-between gap-3 border-b border-border bg-white/[0.02] px-5 py-3">
+            <div className="flex items-center gap-2 font-mono text-[10.5px] uppercase tracking-[0.04em]">
+              <span className="size-[7px] rounded-full bg-brand shadow-[0_0_8px] shadow-brand/70" />
+              <span className="font-semibold text-foreground">ClickMax</span>
               <span className="text-muted-foreground/80">· {orchestration}</span>
             </div>
             <span className="shrink-0 rounded-full border border-border bg-muted/40 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
@@ -112,7 +109,7 @@ function GradientCTA({ label }: { label: string }) {
   return (
     <button
       type="button"
-      className="gradient-brand group/cta mt-6 flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-black/85 shadow-[0_6px_24px_-8px] shadow-lime-400/40 ring-1 ring-inset ring-white/20 transition-all duration-200 hover:shadow-lime-400/60 hover:brightness-[1.04] active:scale-[0.99]"
+      className="gradient-brand group/cta mt-6 flex w-full items-center justify-center gap-2 rounded-[11px] px-4 py-3 text-sm font-semibold text-[hsl(200_40%_10%)] transition-[filter] duration-200 hover:brightness-[1.03] active:brightness-95"
     >
       {label}
       <ArrowRight className="size-4 transition-transform duration-200 group-hover/cta:translate-x-0.5" />

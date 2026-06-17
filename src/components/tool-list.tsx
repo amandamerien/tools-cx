@@ -10,8 +10,8 @@ import { cn } from "@/lib/utils";
 /** Estilo do badge de safety por nível de risco. */
 const safetyBadge: Record<ToolSafety, string> = {
   read: "border-emerald-500/30 bg-emerald-500/10 text-emerald-500",
-  write: "border-amber-500/30 bg-amber-500/10 text-amber-500",
-  idempotent: "border-sky-500/30 bg-sky-500/10 text-sky-500",
+  write: "border-sky-500/30 bg-sky-500/10 text-sky-400",
+  idempotent: "border-amber-500/30 bg-amber-500/10 text-amber-500",
   approval: "border-violet-500/30 bg-violet-500/10 text-violet-400",
   destructive: "border-red-500/30 bg-red-500/10 text-red-500",
 };
@@ -19,8 +19,8 @@ const safetyBadge: Record<ToolSafety, string> = {
 /** Cor da borda esquerda por nível de risco. */
 const safetyBorder: Record<ToolSafety, string> = {
   read: "border-l-emerald-500/50",
-  write: "border-l-amber-500/60",
-  idempotent: "border-l-sky-500/60",
+  write: "border-l-sky-500/60",
+  idempotent: "border-l-amber-500/60",
   approval: "border-l-violet-500/60",
   destructive: "border-l-red-500/60",
 };
