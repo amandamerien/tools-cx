@@ -20,6 +20,7 @@ import propostasEnviadasSemAcompanhamento from "@/content/playbooks/analise/prop
 import ouroLideraAgenda from "@/content/playbooks/analise/ouro-lidera-agenda-de-alto-valor.md?raw";
 import clientesInativosAbrem from "@/content/playbooks/analise/clientes-inativos-ainda-abrem-emails.md?raw";
 import resfriadosPorFunil from "@/content/playbooks/analise/resfriados-por-funil.md?raw";
+import decisaoEscalaCampanha from "@/content/playbooks/analise/decisao-de-escala-de-campanha.md?raw";
 
 export interface Playbook {
   /** Rótulo do grupo (ex: "Resgate · recuperação de vendas") */
@@ -659,6 +660,41 @@ export const playbooks: Record<string, Playbook> = {
     ],
     body: resfriadosPorFunil,
     resultId: "cooled-leads-by-funnel",
+  },
+  "/analise/investimento-onde-colocar-verba/decisao-de-escala-de-campanha": {
+    group: "Investimento · onde colocar verba",
+    groupEmoji: "📈",
+    agent: "Ana (planejada)",
+    title: "decisão de escala de campanha",
+    summary:
+      "Use esta opção quando o usuário perguntar qual campanha ou anúncio gera os clientes com maior valor vitalício do cliente (LTV) e onde aumentar ou reduzir o investimento em anúncios.",
+    gatilhos: [
+      "que campanha trouxe os melhores clientes",
+      "onde escalar verba",
+      "qual anúncio vale mais",
+      "maior valor histórico por campanha",
+      "cortar anúncio que não converte",
+      "Melhor campanha de LTV",
+      "Onde aumentar o investimento em publicidade",
+    ],
+    perguntas: [
+      "Qual campanha trouxe os clientes de maior valor histórico?",
+      "Onde escalo e onde corto verba com base no valor por cliente?",
+      "Qual anúncio gera o maior valor médio por cliente?",
+      "Tem alguma origem orgânica/indicação batendo minhas campanhas pagas?",
+      "Ranking de campanhas por valor do cliente — quanto ficou sem atribuição?",
+    ],
+    ferramentas: [
+      "painel_minhas_vendas",
+      "leads_payments_utm_autocomplete",
+      "leads_origens",
+      "leads_origens_tree",
+      "leads_search",
+      "pergunta",
+      "executar",
+    ],
+    body: decisaoEscalaCampanha,
+    resultId: "campaign-ltv-scale-decision",
   },
 };
 

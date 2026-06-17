@@ -4755,6 +4755,270 @@ function CooledLeadsResult() {
   );
 }
 
+/* ════════════════════════════════════════════════════════════════════════
+   campaign-ltv-scale-decision — ranking de campanhas por valor/cliente
+   ════════════════════════════════════════════════════════════════════════ */
+
+type ScaleKey = "escalar" | "manter" | "cortar" | "anomalia";
+const scaleMeta: Record<ScaleKey, { label: string; chip: string; dot: string; bar: string }> = {
+  escalar: { label: "escalar", chip: "border-brand/40 bg-brand/10 text-brand", dot: "bg-brand", bar: "gradient-brand" },
+  manter: { label: "manter", chip: "border-zinc-300/30 bg-zinc-300/10 text-zinc-300", dot: "bg-zinc-400", bar: "bg-zinc-400" },
+  cortar: { label: "cortar", chip: "border-red-500/30 bg-red-500/10 text-red-400", dot: "bg-red-500", bar: "bg-red-500" },
+  anomalia: { label: "anomalia", chip: "border-amber-500/30 bg-amber-500/10 text-amber-400", dot: "bg-amber-500", bar: "bg-amber-500" },
+};
+
+interface Campaign {
+  key: string;
+  kind: "utm" | "origin";
+  avgCents: number;
+  buyers: number;
+  bucket: ScaleKey;
+}
+
+const campaigns: Campaign[] = ([
+  { key: "Indicação · orgânico", kind: "origin", avgCents: 243000, buyers: 31, bucket: "anomalia" },
+  { key: "Google · Search Brand", kind: "utm", avgCents: 184700, buyers: 42, bucket: "escalar" },
+  { key: "Meta · LR-14", kind: "utm", avgCents: 48700, buyers: 156, bucket: "manter" },
+  { key: "Meta · Lookalike 3%", kind: "utm", avgCents: 31200, buyers: 89, bucket: "manter" },
+  { key: "TikTok · Criativo A", kind: "utm", avgCents: 9400, buyers: 67, bucket: "cortar" },
+  { key: "Google · Display", kind: "utm", avgCents: 6700, buyers: 38, bucket: "cortar" },
+] as Campaign[]).sort((a, b) => b.avgCents - a.avgCents);
+
+const campMaxAvg = Math.max(...campaigns.map((c) => c.avgCents));
+const campDistinctBuyers = 383;
+const campUnattributed = 18;
+const campAnomaly = campaigns.find((c) => c.bucket === "anomalia")!;
+const campBestPaid = campaigns.filter((c) => c.kind === "utm").sort((a, b) => b.avgCents - a.avgCents)[0];
+const campTools = ["painel_minhas_vendas", "leads_origens_tree", "leads_search", "executar"];
+
+function CampFrame({ children }: { children: ReactNode }) {
+  return (
+    <ResultFrame orchestration="CAMPAIGN_LTV_SCALE_DECISION" tag="Vendas" tools={campTools}>
+      {children}
+    </ResultFrame>
+  );
+}
+
+function CampPremise() {
+  return (
+    <p className="text-xs italic leading-relaxed text-muted-foreground">
+      “Receita paga dos últimos 365 dias por UTM do checkout (fallback: origem).
+      'Valor do cliente' = total pago acumulado na janela. {campUnattributed}% ficou sem atribuição.”
+    </p>
+  );
+}
+
+/** Aviso: o Max não mexe em verba; valor/cliente não é ROAS. */
+function BudgetCaveat() {
+  return (
+    <div className="flex items-center gap-2.5 rounded-lg border border-border bg-muted/30 px-3 py-2">
+      <AlertTriangle className="size-3.5 shrink-0 text-muted-foreground" />
+      <p className="text-[11px] leading-relaxed text-muted-foreground">
+        O Max não altera verba — Meta/Google ficam fora. Valor por cliente não é ROAS: o custo não está aqui, a decisão é sua.
+      </p>
+    </div>
+  );
+}
+
+/** Box da anomalia: orgânico/indicação batendo a melhor campanha paga. */
+function AnomalyNote() {
+  if (!campAnomaly || !campBestPaid || campAnomaly.avgCents <= campBestPaid.avgCents) return null;
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-amber-500/30 bg-amber-500/[0.06] p-3">
+      <Sparkles className="size-4 shrink-0 text-amber-400" />
+      <p className="text-xs leading-relaxed text-foreground">
+        <span className="font-semibold text-amber-400">{campAnomaly.key}</span> ({BRL(campAnomaly.avgCents / 100)}/cliente) supera a melhor campanha paga ({BRL(campBestPaid.avgCents / 100)}) — e acontece sem programa formal. Formalizar é a alavanca.
+      </p>
+    </div>
+  );
+}
+
+function ScaleChip({ bucket }: { bucket: ScaleKey }) {
+  return (
+    <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-medium capitalize", scaleMeta[bucket].chip)}>
+      <span className={cn("size-1.5 rounded-full", scaleMeta[bucket].dot)} />{scaleMeta[bucket].label}
+    </span>
+  );
+}
+
+/* ── A1 — Ranking por valor/cliente ─────────────────────────────────── */
+function CA1Ranking() {
+  return (
+    <CampFrame>
+      <CampPremise />
+      <p className="mt-3 text-sm text-foreground">Ranking por <span className="font-semibold">valor médio por cliente</span> · {campaigns.length} canais</p>
+      <p className="mt-0.5 text-xs text-muted-foreground">{campDistinctBuyers} clientes na janela de 365 dias</p>
+      <div className="mt-4"><AnomalyNote /></div>
+      <ul className="mt-4 flex flex-col gap-px">
+        {campaigns.map((c) => (
+          <li key={c.key} className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-accent/50">
+            <span className={cn("size-2 shrink-0 rounded-full", scaleMeta[c.bucket].dot)} />
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm font-medium text-foreground">{c.key}</div>
+              <div className="truncate text-xs text-muted-foreground">{c.buyers} clientes · {c.kind === "origin" ? "origem" : "campanha"}</div>
+            </div>
+            <ScaleChip bucket={c.bucket} />
+            <span className="w-24 shrink-0 text-right text-sm font-semibold tabular-nums text-foreground">{BRL(c.avgCents / 100)}</span>
+          </li>
+        ))}
+      </ul>
+      <div className="mt-4 mb-1"><BudgetCaveat /></div>
+      <GradientCTA label="Segmento dos clientes da campanha top · opt-in" />
+    </CampFrame>
+  );
+}
+
+/* ── A2 — Cards ─────────────────────────────────────────────────────── */
+function CA2Cards() {
+  return (
+    <CampFrame>
+      <div className="flex flex-wrap items-baseline gap-2">
+        <span className="gradient-text text-2xl font-bold">{campaigns.length} canais</span>
+        <span className="text-xs text-muted-foreground">por valor médio por cliente · {campUnattributed}% sem atribuição</span>
+      </div>
+      <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
+        {campaigns.map((c) => (
+          <div key={c.key} className={cn("rounded-xl border bg-card/40 p-3", c.bucket === "anomalia" ? "border-amber-500/30" : c.bucket === "escalar" ? "border-brand/30" : "border-border")}>
+            <div className="flex items-start justify-between gap-2">
+              <span className="min-w-0 truncate text-sm font-medium text-foreground">{c.key}</span>
+              <ScaleChip bucket={c.bucket} />
+            </div>
+            <div className="mt-2.5 flex items-baseline justify-between">
+              <span className="text-lg font-bold tabular-nums text-foreground">{BRL(c.avgCents / 100)}</span>
+              <span className="text-[11px] text-muted-foreground">{c.buyers} clientes</span>
+            </div>
+            <div className="mt-0.5 text-[10px] text-muted-foreground">valor médio por cliente</div>
+          </div>
+        ))}
+      </div>
+      <GradientCTA label="Exportar ranking de canais · opt-in" />
+    </CampFrame>
+  );
+}
+
+/* ── A3 — 3 baldes de decisão ───────────────────────────────────────── */
+function CA3Buckets() {
+  const order: ScaleKey[] = ["escalar", "manter", "cortar"];
+  const labels: Record<string, string> = { escalar: "Escalar · verba subdimensionada", manter: "Manter · valor médio, volume alto", cortar: "Cortar · valor baixo apesar do volume" };
+  return (
+    <CampFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Decisão de verba em 3 baldes</p>
+      <p className="mt-1 mb-4 text-xs text-muted-foreground">Recomendação por valor médio por cliente — não é ação automática</p>
+      <div className="flex flex-col gap-4">
+        {order.map((b) => {
+          const items = campaigns.filter((c) => c.bucket === b);
+          if (items.length === 0) return null;
+          return (
+            <div key={b}>
+              <div className="mb-2 flex items-center gap-2">
+                <span className={cn("size-2 rounded-full", scaleMeta[b].dot)} />
+                <span className="text-sm font-medium text-foreground">{labels[b]}</span>
+              </div>
+              <div className="flex flex-col gap-px">
+                {items.map((c) => (
+                  <div key={c.key} className="flex items-center justify-between gap-2 rounded-lg px-2 py-2 hover:bg-accent/50">
+                    <span className="truncate text-sm text-foreground">{c.key}</span>
+                    <span className="shrink-0 text-sm font-semibold tabular-nums text-foreground">{BRL(c.avgCents / 100)} <span className="font-normal text-muted-foreground">/ {c.buyers}</span></span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+        {campAnomaly && (
+          <div>
+            <div className="mb-2 flex items-center gap-2">
+              <span className="size-2 rounded-full bg-amber-500" />
+              <span className="text-sm font-medium text-amber-400">Anomalia · formalizar</span>
+            </div>
+            <div className="flex items-center justify-between gap-2 rounded-lg px-2 py-2">
+              <span className="truncate text-sm text-foreground">{campAnomaly.key}</span>
+              <span className="shrink-0 text-sm font-semibold tabular-nums text-foreground">{BRL(campAnomaly.avgCents / 100)} <span className="font-normal text-muted-foreground">/ {campAnomaly.buyers}</span></span>
+            </div>
+          </div>
+        )}
+      </div>
+      <div className="mt-4"><BudgetCaveat /></div>
+      <GradientCTA label="Montar programa de indicação · opt-in" />
+    </CampFrame>
+  );
+}
+
+/* ── A4 — Tabela ────────────────────────────────────────────────────── */
+function CA4Table() {
+  return (
+    <CampFrame>
+      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-2">
+        <span className="gradient-text text-2xl font-bold">{campaigns.length} canais</span>
+        <span className="text-xs text-muted-foreground">{campDistinctBuyers} clientes · {campUnattributed}% sem atribuição</span>
+      </div>
+      <div className="overflow-x-auto rounded-lg border border-border">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
+              <th className="px-3 py-2 font-medium">Canal</th>
+              <th className="px-3 py-2 text-center font-medium">Clientes</th>
+              <th className="px-3 py-2 font-medium">Decisão</th>
+              <th className="px-3 py-2 text-right font-medium">Valor/cliente</th>
+            </tr>
+          </thead>
+          <tbody>
+            {campaigns.map((c) => (
+              <tr key={c.key} className={cn("border-b border-border last:border-0 hover:bg-accent/40", c.bucket === "anomalia" && "bg-amber-500/[0.04]", c.bucket === "escalar" && "bg-brand/[0.04]")}>
+                <td className="px-3 py-2 font-medium text-foreground">{c.key}</td>
+                <td className="px-3 py-2 text-center tabular-nums text-muted-foreground">{c.buyers}</td>
+                <td className="px-3 py-2"><ScaleChip bucket={c.bucket} /></td>
+                <td className="px-3 py-2 text-right font-semibold tabular-nums text-foreground">{BRL(c.avgCents / 100)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <GradientCTA label="Exportar decisão de verba · opt-in" />
+    </CampFrame>
+  );
+}
+
+/* ── A5 — Barras de valor médio ─────────────────────────────────────── */
+function CA5Bars() {
+  return (
+    <CampFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Valor médio por cliente · por canal</p>
+      <div className="mt-2 flex items-end gap-2">
+        <span className="gradient-text text-4xl font-bold tracking-tight">{BRL(campaigns[0].avgCents / 100)}</span>
+        <span className="mb-1 text-sm text-muted-foreground">no topo · {campaigns[0].key}</span>
+      </div>
+      <div className="mt-5 flex flex-col gap-3">
+        {campaigns.map((c) => (
+          <div key={c.key}>
+            <div className="mb-1 flex items-center justify-between gap-2 text-sm">
+              <span className="flex items-center gap-2 truncate"><span className={cn("size-2 shrink-0 rounded-full", scaleMeta[c.bucket].dot)} /><span className="truncate text-foreground">{c.key}</span></span>
+              <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{BRL(c.avgCents / 100)} · {c.buyers}</span>
+            </div>
+            <div className="h-2.5 overflow-hidden rounded-full bg-muted">
+              <div className={cn("h-full rounded-full", scaleMeta[c.bucket].bar)} style={{ width: `${(c.avgCents / campMaxAvg) * 100}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-4"><AnomalyNote /></div>
+      <GradientCTA label="Priorizar os de maior valor · opt-in" />
+    </CampFrame>
+  );
+}
+
+function CampaignScaleResult() {
+  return (
+    <div className="flex flex-col gap-9">
+      <Variation n={1} title="Ranking por valor/cliente"><CA1Ranking /></Variation>
+      <Variation n={2} title="Cards por canal"><CA2Cards /></Variation>
+      <Variation n={3} title="3 baldes de decisão"><CA3Buckets /></Variation>
+      <Variation n={4} title="Tabela"><CA4Table /></Variation>
+      <Variation n={5} title="Barras de valor médio"><CA5Bars /></Variation>
+    </div>
+  );
+}
+
 /** Registro: id do componente → componente de resultado. */
 export const resultComponents: Record<string, ComponentType> = {
   "card-declined-recovery-list": CardDeclinedRecoveryResult,
@@ -4775,6 +5039,7 @@ export const resultComponents: Record<string, ComponentType> = {
   "gold-leads-high-ticket-agenda": GoldLeadsResult,
   "lapsed-customers-still-opening": LapsedCustomersResult,
   "cooled-leads-by-funnel": CooledLeadsResult,
+  "campaign-ltv-scale-decision": CampaignScaleResult,
 };
 
 export function getResultComponent(id: string): ComponentType | undefined {
