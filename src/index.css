@@ -1,0 +1,309 @@
+@import "tailwindcss";
+
+/* ---- Dark mode via classe na <html> ---- */
+@variant dark (&:where(.dark, .dark *));
+
+/* ========================================================================
+   Design tokens — estilo shadcn/ui (OKLCH)
+   ======================================================================== */
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+
+  --radius: 0.625rem;
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+
+  --card: oklch(0.185 0 0);
+  --card-foreground: oklch(0.985 0 0);
+
+  --popover: oklch(0.185 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+
+  --primary: oklch(0.985 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.985 0 0);
+
+  --border: oklch(1 0 0 / 8%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.556 0 0);
+
+  --sidebar: oklch(0.165 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 8%);
+}
+
+/* Cor de marca (lime/chartreuse) — usada em badges e links inline */
+:root {
+  --brand: oklch(0.82 0.19 124);
+  --brand-foreground: oklch(0.25 0.06 124);
+  --brand-muted: oklch(0.82 0.19 124 / 12%);
+}
+.dark {
+  --brand: oklch(0.86 0.2 124);
+  --brand-foreground: oklch(0.22 0.06 124);
+  --brand-muted: oklch(0.86 0.2 124 / 10%);
+}
+
+/* ---- Expor tokens ao Tailwind v4 ---- */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-muted: var(--brand-muted);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
+* {
+  border-color: var(--border);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ========================================================================
+   Prosa de documentação (.prose-doc) — estilo shadcn
+   ======================================================================== */
+.prose-doc {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--muted-foreground);
+}
+.prose-doc > * + * {
+  margin-top: 1.1rem;
+}
+.prose-doc h2 {
+  margin-top: 2.5rem;
+  margin-bottom: 0.5rem;
+  scroll-margin-top: 5rem;
+  font-size: 1.4rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--foreground);
+}
+.prose-doc h3 {
+  margin-top: 1.75rem;
+  margin-bottom: 0.4rem;
+  scroll-margin-top: 5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+.prose-doc h2 + *,
+.prose-doc h3 + * {
+  margin-top: 0.5rem;
+}
+.prose-doc strong {
+  font-weight: 600;
+  color: var(--foreground);
+}
+.prose-doc a {
+  color: var(--brand);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: color-mix(in oklch, var(--brand) 40%, transparent);
+}
+.prose-doc a:hover {
+  text-decoration-color: var(--brand);
+}
+.prose-doc code {
+  border-radius: var(--radius-sm);
+  border: 1px solid color-mix(in oklch, var(--brand) 30%, transparent);
+  background-color: var(--brand-muted);
+  padding: 0.1em 0.4em;
+  font-family: var(--font-mono);
+  font-size: 0.82em;
+  color: var(--brand);
+  white-space: nowrap;
+}
+.prose-doc pre {
+  overflow-x: auto;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background-color: color-mix(in oklch, var(--card) 60%, var(--background));
+  padding: 1rem 1.15rem;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+.prose-doc pre code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
+  color: var(--foreground);
+  white-space: pre;
+  border: none;
+}
+.prose-doc ul,
+.prose-doc ol {
+  margin-left: 0.25rem;
+  padding-left: 1.25rem;
+}
+.prose-doc ul {
+  list-style: disc;
+}
+.prose-doc ol {
+  list-style: decimal;
+}
+.prose-doc li {
+  margin-top: 0.4rem;
+  padding-left: 0.25rem;
+}
+.prose-doc li::marker {
+  color: var(--muted-foreground);
+}
+.prose-doc blockquote {
+  border-left: 2px solid var(--brand);
+  padding-left: 1rem;
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+.prose-doc hr {
+  border: none;
+  border-top: 1px solid var(--border);
+}
+.prose-doc table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+.prose-doc th,
+.prose-doc td {
+  border: 1px solid var(--border);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+.prose-doc th {
+  background-color: var(--muted);
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+/* Moldura pontilhada decorativa dos componentes de resultado */
+.dot-frame {
+  background-image: radial-gradient(
+    circle,
+    color-mix(in oklch, var(--muted-foreground) 30%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: 14px 14px;
+}
+
+/* Texto em gradiente de marca (ciano → lime) */
+.gradient-brand {
+  background-image: linear-gradient(
+    100deg,
+    oklch(0.85 0.13 200),
+    oklch(0.9 0.21 130)
+  );
+}
+.gradient-text {
+  background-image: linear-gradient(
+    100deg,
+    oklch(0.85 0.13 200),
+    oklch(0.9 0.21 130)
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Scrollbar discreta */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background-color: var(--border);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--muted-foreground);
+}

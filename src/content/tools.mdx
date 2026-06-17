@@ -1,0 +1,7 @@
+Extraído de `bilhon-technologies/monorepo` · `workers/ai/src/` · commit `e0cba68` (2026-06-10).
+
+- **Parte 1** — as 261 tools (nome, título, safety read/write, inputSchema, descrição) extraídas deterministicamente dos `defineTool` em `tools/**`.
+- **Parte 2** — os 25 documentos de domínio (`resources/**.md`) carregados pelo worker como contexto das tools: é AQUI que mora a semântica de campos/parametrização.
+- **Parte 3** — semântica do `execute` (codemode) e do `question`.
+
+Os `inputSchema` referenciam schemas zod GERADOS pelos SDKs (`@clickmax/*-sdk/zod`, fora do git). Quando a forma exata do parâmetro não estiver na descrição nem no doc de domínio, o playbook deve declarar isso e não inventar campo.
