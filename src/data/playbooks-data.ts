@@ -21,6 +21,7 @@ import ouroLideraAgenda from "@/content/playbooks/analise/ouro-lidera-agenda-de-
 import clientesInativosAbrem from "@/content/playbooks/analise/clientes-inativos-ainda-abrem-emails.md?raw";
 import resfriadosPorFunil from "@/content/playbooks/analise/resfriados-por-funil.md?raw";
 import decisaoEscalaCampanha from "@/content/playbooks/analise/decisao-de-escala-de-campanha.md?raw";
+import candidatosUpsellCruzado from "@/content/playbooks/analise/candidatos-a-upsell-de-produtos-cruzados.md?raw";
 
 export interface Playbook {
   /** Rótulo do grupo (ex: "Resgate · recuperação de vendas") */
@@ -695,6 +696,40 @@ export const playbooks: Record<string, Playbook> = {
     ],
     body: decisaoEscalaCampanha,
     resultId: "campaign-ltv-scale-decision",
+  },
+  "/analise/investimento-onde-colocar-verba/candidatos-a-upsell-de-produto": {
+    group: "Investimento · onde colocar verba",
+    groupEmoji: "📈",
+    agent: "Ana (planejada)",
+    title: "candidatos a upsell de produto",
+    summary:
+      "Use quando o usuário perguntar quais pares de produtos têm a maior conversão de venda cruzada, onde está a lacuna entre oferta e exposição e quais produtos são becos sem saída.",
+    gatilhos: [
+      "que produto puxa mais venda",
+      "quem compra X depois compra Y",
+      "venda cruzada",
+      "esteira de produtos",
+      "beco sem saída",
+      "mapa de vendas cruzadas",
+      "análise da sequência do produto",
+    ],
+    perguntas: [
+      "Quais pares de produtos têm a maior conversão de venda cruzada?",
+      "Que produto mais puxa uma próxima compra na minha esteira?",
+      "Onde está o gap: par que converte muito mas pouca gente recebe a oferta?",
+      "Quais produtos são becos sem saída (ninguém compra nada depois)?",
+      "Mapa da esteira: o que comprar primeiro puxa qual próximo produto?",
+    ],
+    ferramentas: [
+      "painel_minhas_vendas",
+      "lista_de_produtos",
+      "leads_produtos_comuns",
+      "lista_de_fluxos",
+      "pergunta",
+      "executar",
+    ],
+    body: candidatosUpsellCruzado,
+    resultId: "cross-product-upsell-candidates",
   },
 };
 

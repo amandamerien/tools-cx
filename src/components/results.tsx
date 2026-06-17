@@ -5019,6 +5019,294 @@ function CampaignScaleResult() {
   );
 }
 
+/* ════════════════════════════════════════════════════════════════════════
+   cross-product-upsell-candidates — mapa da esteira: o que puxa o quê
+   ════════════════════════════════════════════════════════════════════════ */
+
+interface UpsellPair {
+  a: string;
+  b: string;
+  baseA: number;
+  converted: number;
+  pct: number;
+  priceBCents: number;
+  hasFlow: boolean;
+}
+interface PullProduct {
+  product: string;
+  buyers: number;
+  nextPct: number;
+}
+
+const upsellPairs: UpsellPair[] = [
+  { a: "Curso Base", b: "Mentoria", baseA: 320, converted: 122, pct: 38, priceBCents: 199700, hasFlow: false },
+  { a: "Curso Base", b: "Workshop Tráfego", baseA: 320, converted: 96, pct: 30, priceBCents: 49700, hasFlow: true },
+  { a: "Mentoria", b: "Imersão Presencial", baseA: 95, converted: 28, pct: 29, priceBCents: 500000, hasFlow: false },
+  { a: "Workshop Tráfego", b: "Mentoria", baseA: 180, converted: 36, pct: 20, priceBCents: 199700, hasFlow: false },
+  { a: "Ebook Grátis", b: "Curso Base", baseA: 540, converted: 65, pct: 12, priceBCents: 99700, hasFlow: true },
+].sort((x, y) => y.pct - x.pct);
+
+const upsellPull: PullProduct[] = [
+  { product: "Curso Base", buyers: 320, nextPct: 64 },
+  { product: "Workshop Tráfego", buyers: 180, nextPct: 51 },
+  { product: "Mentoria", buyers: 95, nextPct: 42 },
+  { product: "Ebook Grátis", buyers: 540, nextPct: 28 },
+  { product: "Template Pack", buyers: 64, nextPct: 9 },
+  { product: "Pacote Avulso", buyers: 88, nextPct: 7 },
+].sort((a, b) => b.nextPct - a.nextPct);
+
+const upsellDeadEnds = upsellPull.filter((p) => p.nextPct < 10);
+const estGap = (p: UpsellPair) => Math.round((p.baseA - p.converted) * (p.pct / 100) * p.priceBCents);
+const upsellChampion = [...upsellPairs].sort((a, b) => estGap(b) - estGap(a))[0];
+const upsellBuyersWithSeq = 412;
+const upsellTools = ["painel_minhas_vendas", "lista_de_produtos", "lista_de_fluxos", "executar"];
+
+function UpsellFrame({ children }: { children: ReactNode }) {
+  return (
+    <ResultFrame orchestration="CROSS_PRODUCT_UPSELL_CANDIDATES" tag="Vendas" tools={upsellTools}>
+      {children}
+    </ResultFrame>
+  );
+}
+
+function UpsellPremise() {
+  return (
+    <p className="text-xs italic leading-relaxed text-muted-foreground">
+      “Sequências de compras pagas dos últimos 365 dias; par A→B contado 1× por
+      comprador, base mínima de 10. Mapa da esteira — não lista de pessoas.”
+    </p>
+  );
+}
+
+/** Limitação: exposição não é instrumentada; o gap é teto, não medição. */
+function ExposureNote() {
+  return (
+    <div className="flex items-center gap-2.5 rounded-lg border border-border bg-muted/30 px-3 py-2">
+      <AlertTriangle className="size-3.5 shrink-0 text-muted-foreground" />
+      <p className="text-[11px] leading-relaxed text-muted-foreground">
+        Exposição não instrumentada — o gap é um teto estimado (assume que a base não convertida não recebeu a oferta), não medição. Confirmar a automação real é passo seu.
+      </p>
+    </div>
+  );
+}
+
+/** Chip de cobertura de automação (sinal heurístico via flows_list). */
+function FlowChip({ has }: { has: boolean }) {
+  return has ? (
+    <span className="inline-flex items-center gap-1 rounded-full border border-zinc-300/30 bg-zinc-300/10 px-1.5 py-0.5 text-[10px] font-medium text-zinc-300">tem automação</span>
+  ) : (
+    <span className="inline-flex items-center gap-1 rounded-full border border-brand/40 bg-brand/10 px-1.5 py-0.5 text-[10px] font-medium text-brand">sem flow → gap</span>
+  );
+}
+
+function PairArrow({ a, b }: { a: string; b: string }) {
+  return (
+    <span className="flex min-w-0 items-center gap-1.5 text-sm">
+      <span className="truncate font-medium text-foreground">{a}</span>
+      <ArrowRight className="size-3.5 shrink-0 text-brand" />
+      <span className="truncate font-medium text-foreground">{b}</span>
+    </span>
+  );
+}
+
+/* ── U1 — Mapa da esteira (3 blocos) ────────────────────────────────── */
+function CP1Map() {
+  const maxPull = Math.max(...upsellPull.map((p) => p.nextPct));
+  return (
+    <UpsellFrame>
+      <UpsellPremise />
+      {/* bloco 1 — puxa mais */}
+      <p className="mt-4 mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Quem mais puxa a próxima compra</p>
+      <div className="flex flex-col gap-2.5">
+        {upsellPull.slice(0, 3).map((p) => (
+          <div key={p.product}>
+            <div className="mb-1 flex items-center justify-between gap-2 text-sm">
+              <span className="truncate text-foreground">{p.product}</span>
+              <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{p.nextPct}% · {p.buyers} compradores</span>
+            </div>
+            <div className="h-2 overflow-hidden rounded-full bg-muted">
+              <div className="h-full rounded-full gradient-brand" style={{ width: `${(p.nextPct / maxPull) * 100}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+      {/* bloco 2 — pares com gap */}
+      <p className="mt-5 mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Pares de alta conversão · com gap</p>
+      <ul className="flex flex-col gap-px">
+        {upsellPairs.slice(0, 3).map((p) => (
+          <li key={`${p.a}-${p.b}`} className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-accent/50">
+            <div className="min-w-0 flex-1">
+              <PairArrow a={p.a} b={p.b} />
+              <div className="mt-1 flex items-center gap-2">
+                <span className="text-xs tabular-nums text-muted-foreground">{p.pct}% convertem</span>
+                <FlowChip has={p.hasFlow} />
+              </div>
+            </div>
+            <div className="shrink-0 text-right">
+              <div className="text-sm font-semibold tabular-nums text-foreground">{BRL(estGap(p) / 100)}</div>
+              <div className="text-[10px] text-muted-foreground">gap estimado</div>
+            </div>
+          </li>
+        ))}
+      </ul>
+      {/* bloco 3 — becos sem saída */}
+      <p className="mt-5 mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Becos sem saída</p>
+      <div className="flex flex-wrap gap-2">
+        {upsellDeadEnds.map((p) => (
+          <span key={p.product} className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/[0.06] px-2.5 py-1.5 text-xs">
+            <span className="size-1.5 rounded-full bg-red-500" />
+            <span className="text-foreground">{p.product}</span>
+            <span className="tabular-nums text-muted-foreground">{p.nextPct}%</span>
+          </span>
+        ))}
+      </div>
+      <div className="mt-4 mb-1"><ExposureNote /></div>
+      <GradientCTA label="Automatizar o par campeão · opt-in" />
+    </UpsellFrame>
+  );
+}
+
+/* ── U2 — Pares (cards) ─────────────────────────────────────────────── */
+function CP2Pairs() {
+  return (
+    <UpsellFrame>
+      <div className="flex flex-wrap items-baseline gap-2">
+        <span className="gradient-text text-2xl font-bold">{upsellPairs.length} pares</span>
+        <span className="text-xs text-muted-foreground">de alta conversão · {upsellBuyersWithSeq} compradores com sequência</span>
+      </div>
+      <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
+        {upsellPairs.map((p) => (
+          <div key={`${p.a}-${p.b}`} className={cn("rounded-xl border bg-card/40 p-3", !p.hasFlow ? "border-brand/30" : "border-border")}>
+            <PairArrow a={p.a} b={p.b} />
+            <div className="mt-2.5 flex items-center justify-between">
+              <span className="text-lg font-bold tabular-nums text-foreground">{p.pct}%</span>
+              <FlowChip has={p.hasFlow} />
+            </div>
+            <div className="mt-1.5 flex items-center justify-between text-[11px] text-muted-foreground">
+              <span>{p.converted}/{p.baseA} compradores</span>
+              <span className="font-medium text-foreground">{BRL(estGap(p) / 100)} gap</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      <GradientCTA label="Configurar oferta automática · opt-in" />
+    </UpsellFrame>
+  );
+}
+
+/* ── U3 — Pull ranking + becos ──────────────────────────────────────── */
+function CP3Pull() {
+  const max = Math.max(...upsellPull.map((p) => p.nextPct));
+  return (
+    <UpsellFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Pull rate · % que compra algo depois</p>
+      <p className="mt-1 mb-4 text-xs text-muted-foreground">Quanto mais alto, mais o produto "puxa" a esteira</p>
+      <div className="flex flex-col gap-3">
+        {upsellPull.map((p) => {
+          const dead = p.nextPct < 10;
+          return (
+            <div key={p.product}>
+              <div className="mb-1 flex items-center justify-between gap-2 text-sm">
+                <span className="flex items-center gap-2 truncate"><span className={cn("size-2 shrink-0 rounded-full", dead ? "bg-red-500" : "bg-brand")} /><span className="truncate text-foreground">{p.product}</span></span>
+                <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{p.nextPct}% · {p.buyers}</span>
+              </div>
+              <div className="h-2.5 overflow-hidden rounded-full bg-muted">
+                <div className={cn("h-full rounded-full", dead ? "bg-red-500" : "gradient-brand")} style={{ width: `${(p.nextPct / max) * 100}%` }} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <p className="mt-4 text-xs leading-relaxed text-muted-foreground">Em vermelho, os becos sem saída (&lt; 10%): quem compra quase não volta — repensar a oferta seguinte.</p>
+      <GradientCTA label="Desenhar saída pros becos · opt-in" />
+    </UpsellFrame>
+  );
+}
+
+/* ── U4 — Tabela de pares ───────────────────────────────────────────── */
+function CP4Table() {
+  return (
+    <UpsellFrame>
+      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-2">
+        <span className="gradient-text text-2xl font-bold">{upsellPairs.length} pares</span>
+        <span className="text-xs text-muted-foreground">por conversão · base mínima 10</span>
+      </div>
+      <div className="overflow-x-auto rounded-lg border border-border">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
+              <th className="px-3 py-2 font-medium">Par A → B</th>
+              <th className="px-3 py-2 text-center font-medium">Conv.</th>
+              <th className="px-3 py-2 font-medium">Automação</th>
+              <th className="px-3 py-2 text-right font-medium">Gap</th>
+            </tr>
+          </thead>
+          <tbody>
+            {upsellPairs.map((p) => (
+              <tr key={`${p.a}-${p.b}`} className={cn("border-b border-border last:border-0 hover:bg-accent/40", !p.hasFlow && "bg-brand/[0.04]")}>
+                <td className="px-3 py-2"><PairArrow a={p.a} b={p.b} /></td>
+                <td className="px-3 py-2 text-center"><span className="rounded-md border border-border px-1.5 py-0.5 text-xs font-semibold tabular-nums text-foreground">{p.pct}%</span></td>
+                <td className="px-3 py-2"><FlowChip has={p.hasFlow} /></td>
+                <td className="px-3 py-2 text-right font-semibold tabular-nums text-foreground">{BRL(estGap(p) / 100)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="mt-3"><ExposureNote /></div>
+      <GradientCTA label="Exportar mapa da esteira · opt-in" />
+    </UpsellFrame>
+  );
+}
+
+/* ── U5 — Gap campeão (hero) ────────────────────────────────────────── */
+function CP5Champion() {
+  const c = upsellChampion;
+  return (
+    <UpsellFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Maior gap estrutural · teto estimado</p>
+      <div className="mt-2">
+        <span className="gradient-text text-5xl font-bold tracking-tight">{BRL(estGap(c) / 100)}</span>
+      </div>
+      <p className="mt-1 text-sm text-muted-foreground">parados no par que mais converte sem automação dedicada</p>
+      <div className="mt-5 rounded-xl border border-brand/30 bg-brand/[0.05] p-4">
+        <div className="flex items-center justify-between gap-2">
+          <PairArrow a={c.a} b={c.b} />
+          <FlowChip has={c.hasFlow} />
+        </div>
+        <div className="mt-3 grid grid-cols-3 gap-3">
+          <div>
+            <div className="text-xl font-bold tabular-nums text-foreground">{c.pct}%</div>
+            <div className="text-[10px] text-muted-foreground">convertem A→B</div>
+          </div>
+          <div>
+            <div className="text-xl font-bold tabular-nums text-foreground">{c.baseA - c.converted}</div>
+            <div className="text-[10px] text-muted-foreground">base sem a oferta</div>
+          </div>
+          <div>
+            <div className="text-xl font-bold tabular-nums text-foreground">{BRL(c.priceBCents / 100)}</div>
+            <div className="text-[10px] text-muted-foreground">preço de {c.b}</div>
+          </div>
+        </div>
+      </div>
+      <div className="mt-3"><ExposureNote /></div>
+      <GradientCTA label="Montar a oferta automática · opt-in" />
+    </UpsellFrame>
+  );
+}
+
+function CrossUpsellResult() {
+  return (
+    <div className="flex flex-col gap-9">
+      <Variation n={1} title="Mapa da esteira (3 blocos)"><CP1Map /></Variation>
+      <Variation n={2} title="Pares (cards)"><CP2Pairs /></Variation>
+      <Variation n={3} title="Pull rate + becos"><CP3Pull /></Variation>
+      <Variation n={4} title="Tabela de pares"><CP4Table /></Variation>
+      <Variation n={5} title="Gap campeão (hero)"><CP5Champion /></Variation>
+    </div>
+  );
+}
+
 /** Registro: id do componente → componente de resultado. */
 export const resultComponents: Record<string, ComponentType> = {
   "card-declined-recovery-list": CardDeclinedRecoveryResult,
@@ -5040,6 +5328,7 @@ export const resultComponents: Record<string, ComponentType> = {
   "lapsed-customers-still-opening": LapsedCustomersResult,
   "cooled-leads-by-funnel": CooledLeadsResult,
   "campaign-ltv-scale-decision": CampaignScaleResult,
+  "cross-product-upsell-candidates": CrossUpsellResult,
 };
 
 export function getResultComponent(id: string): ComponentType | undefined {
