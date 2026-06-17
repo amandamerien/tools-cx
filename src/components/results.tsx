@@ -920,11 +920,297 @@ function CheckoutAbandonmentResult() {
   );
 }
 
+/* ════════════════════════════════════════════════════════════════════════
+   canceled-purchase-not-returned — coorte por motivo de cancelamento
+   ════════════════════════════════════════════════════════════════════════ */
+
+const groupMeta: Record<string, { chip: string; bar: string; support?: boolean }> = {
+  preco: { chip: "border-amber-500/30 bg-amber-500/10 text-amber-400", bar: "from-amber-400 to-amber-300" },
+  expectativa: { chip: "border-sky-500/30 bg-sky-500/10 text-sky-400", bar: "from-sky-400 to-sky-300" },
+  timing: { chip: "border-violet-500/30 bg-violet-500/10 text-violet-400", bar: "from-violet-400 to-violet-300" },
+  acesso: { chip: "border-red-500/30 bg-red-500/10 text-red-400", bar: "from-red-500 to-red-400", support: true },
+  sem_motivo: { chip: "border-border bg-muted/60 text-muted-foreground", bar: "from-zinc-500 to-zinc-400" },
+};
+
+interface CancelLead {
+  name: string;
+  email: string;
+  value: number;
+  product: string;
+  age: string;
+}
+interface CancelGroup {
+  group: keyof typeof groupMeta;
+  label: string;
+  suggestedPlay: string;
+  leadCount: number;
+  totalCanceledValue: number;
+  hiddenCount: number;
+  leads: CancelLead[];
+}
+
+const cancelGroups: CancelGroup[] = [
+  { group: "preco", label: "Achou caro", suggestedPlay: "oferecer produto mais barato", leadCount: 8, totalCanceledValue: 9576, hiddenCount: 6, leads: [
+    { name: "Diego Martins", email: "diego.m@outlook.com", value: 1297, product: "Programa Anual", age: "há 3d" },
+    { name: "Patrícia Gomes", email: "paty.gomes@gmail.com", value: 997, product: "Mentoria Pro", age: "há 6d" },
+  ]},
+  { group: "expectativa", label: "Não era o que esperava", suggestedPlay: "oferecer produto adjacente", leadCount: 5, totalCanceledValue: 3485, hiddenCount: 3, leads: [
+    { name: "Rafael Souza", email: "rafael.souza@hotmail.com", value: 497, product: "Imersão Vendas", age: "há 2d" },
+    { name: "Camila Rocha", email: "camila.rocha@gmail.com", value: 297, product: "Curso Express", age: "há 5d" },
+  ]},
+  { group: "timing", label: "Não era a hora", suggestedPlay: "silêncio de 21 dias e reabordar", leadCount: 4, totalCanceledValue: 2788, hiddenCount: 2, leads: [
+    { name: "Lucas Pereira", email: "lucas.pereira@gmail.com", value: 697, product: "Programa Anual", age: "há 1d" },
+    { name: "Bruno Costa", email: "bruno.costa@gmail.com", value: 397, product: "Mentoria Pro", age: "há 4d" },
+  ]},
+  { group: "acesso", label: "Problema de acesso", suggestedPlay: "encaminhar pro suporte — é bug, não desinteresse", leadCount: 3, totalCanceledValue: 2091, hiddenCount: 1, leads: [
+    { name: "Fernanda Dias", email: "fe.dias@gmail.com", value: 697, product: "Curso Express", age: "há 2d" },
+    { name: "André Luiz", email: "andre.luiz@hotmail.com", value: 497, product: "Ebook Tráfego", age: "há 7d" },
+  ]},
+  { group: "sem_motivo", label: "Sem motivo registrado / não mapeado", suggestedPlay: "CS liga pra entender antes de ofertar", leadCount: 4, totalCanceledValue: 5188, hiddenCount: 2, leads: [
+    { name: "Marina Alves", email: "marina.alves@gmail.com", value: 1297, product: "Programa Anual", age: "há 1d" },
+    { name: "Beatriz Lima", email: "bia.lima@gmail.com", value: 997, product: "Imersão Vendas", age: "há 3d" },
+  ]},
+];
+
+const cancelTools = ["painel_minhas_vendas", "lista_de_assinaturas", "transacoes_obter", "executar"];
+
+function CancelFrame({ children }: { children: ReactNode }) {
+  return (
+    <ResultFrame orchestration="CANCELED_PURCHASE_NOT_RETURNED" tools={cancelTools}>
+      {children}
+    </ResultFrame>
+  );
+}
+
+function CancelPremise() {
+  return (
+    <p className="text-xs italic leading-relaxed text-muted-foreground">
+      “Estornos (refunded) e chargebacks dos últimos 60 dias, excluindo quem
+      voltou a comprar — agrupados por motivo.”
+    </p>
+  );
+}
+
+function PlayChip({ g }: { g: CancelGroup }) {
+  return (
+    <span className={cn("rounded-full border px-2 py-0.5 text-[11px] font-medium", groupMeta[g.group].chip)}>
+      {g.suggestedPlay}
+    </span>
+  );
+}
+
+/* ── X1 — Grupos por motivo ─────────────────────────────────────────── */
+function XV1Groups() {
+  return (
+    <CancelFrame>
+      <CancelPremise />
+      <div className="mt-3 flex flex-wrap items-end gap-x-2 gap-y-1">
+        <span className="gradient-text text-4xl font-bold tracking-tight">24</span>
+        <span className="mb-1 text-base font-medium text-foreground">nunca voltaram · {BRL(23128)}</span>
+      </div>
+      <p className="mt-1 text-xs text-muted-foreground">31 compras canceladas · 7 já recompraram (removidos)</p>
+      <div className="mt-5 flex flex-col gap-3">
+        {cancelGroups.map((g) => {
+          const m = groupMeta[g.group];
+          return (
+            <div key={g.group} className={cn("rounded-lg border bg-card/40 p-3.5", m.support ? "border-red-500/30" : "border-border")}>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="flex items-center gap-1.5 font-medium text-foreground">
+                  {m.support && <AlertTriangle className="size-4 text-red-400" />}
+                  {g.label}
+                </span>
+                <PlayChip g={g} />
+              </div>
+              <div className="mt-1.5 text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">{g.leadCount} pessoas</span> · {BRL(g.totalCanceledValue)}
+              </div>
+              <ul className="mt-2 flex flex-col gap-1">
+                {g.leads.slice(0, 2).map((l) => (
+                  <li key={l.email} className="flex items-center justify-between text-xs">
+                    <span className="text-foreground">{l.name} <span className="text-muted-foreground">· {l.product}</span></span>
+                    <span className="text-muted-foreground">{BRL(l.value)} · {l.age}</span>
+                  </li>
+                ))}
+              </ul>
+              {g.hiddenCount > 0 && <div className="mt-1.5 text-xs font-medium text-brand">+ {g.hiddenCount} pessoas</div>}
+            </div>
+          );
+        })}
+      </div>
+      <GradientCTA label="Disparar win-back por motivo · opt-in" />
+    </CancelFrame>
+  );
+}
+
+/* ── X2 — Funil + grupos ────────────────────────────────────────────── */
+function XV2Funnel() {
+  const steps = [
+    { label: "Compras canceladas", value: 31, pct: 100 },
+    { label: "Já recompraram (saem)", value: 7, pct: 23 },
+    { label: "Resgate (não voltaram)", value: 24, pct: 77 },
+  ];
+  return (
+    <CancelFrame>
+      <CancelPremise />
+      <div className="mt-4 flex flex-col gap-3">
+        {steps.map((s) => (
+          <div key={s.label}>
+            <div className="mb-1.5 flex items-center justify-between text-sm">
+              <span className="font-medium text-foreground">{s.label}</span>
+              <span className="tabular-nums text-muted-foreground">{s.value} · {s.pct}%</span>
+            </div>
+            <div className="h-2.5 overflow-hidden rounded-full bg-muted">
+              <div className="gradient-brand h-full rounded-full" style={{ width: `${s.pct}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-5 flex flex-col divide-y divide-border overflow-hidden rounded-lg border border-border">
+        {cancelGroups.map((g) => (
+          <div key={g.group} className="flex items-center justify-between gap-2 p-3">
+            <span className="flex items-center gap-1.5 text-sm text-foreground">
+              {groupMeta[g.group].support && <AlertTriangle className="size-3.5 text-red-400" />}
+              {g.label}
+            </span>
+            <div className="flex items-center gap-2">
+              <PlayChip g={g} />
+              <span className="w-6 text-right text-sm tabular-nums text-muted-foreground">{g.leadCount}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      <GradientCTA label="Ver leads por motivo" />
+    </CancelFrame>
+  );
+}
+
+/* ── X3 — Barras por motivo ─────────────────────────────────────────── */
+function XV3Bars() {
+  const max = Math.max(...cancelGroups.map((g) => g.leadCount));
+  return (
+    <CancelFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+        Resgate por motivo · 60 dias
+      </p>
+      <div className="mt-2 flex items-end gap-2">
+        <span className="gradient-text text-5xl font-bold tracking-tight">24</span>
+        <span className="mb-1.5 text-sm text-muted-foreground">pessoas · {BRL(23128)}</span>
+      </div>
+      <div className="mt-5 flex flex-col gap-4">
+        {cancelGroups.map((g) => (
+          <div key={g.group}>
+            <div className="mb-1.5 flex items-center justify-between gap-2 text-sm">
+              <span className="flex items-center gap-1.5 font-medium text-foreground">
+                {groupMeta[g.group].support && <AlertTriangle className="size-3.5 text-red-400" />}
+                {g.label}
+              </span>
+              <span className="shrink-0 tabular-nums text-muted-foreground">{g.leadCount} · {BRL(g.totalCanceledValue)}</span>
+            </div>
+            <div className="h-2.5 overflow-hidden rounded-full bg-muted">
+              <div className={cn("h-full rounded-full bg-gradient-to-r", groupMeta[g.group].bar)} style={{ width: `${(g.leadCount / max) * 100}%` }} />
+            </div>
+            <p className="mt-1 text-[11px] text-muted-foreground">▸ {g.suggestedPlay}</p>
+          </div>
+        ))}
+      </div>
+      <GradientCTA label="Ver leads por motivo" />
+    </CancelFrame>
+  );
+}
+
+/* ── X4 — Tabela agrupada ───────────────────────────────────────────── */
+function XV4Table() {
+  return (
+    <CancelFrame>
+      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-2">
+        <span className="gradient-text text-2xl font-bold">24 pessoas</span>
+        <span className="text-xs text-muted-foreground">{BRL(23128)} · 31 canceladas · 5 motivos</span>
+      </div>
+      <div className="overflow-x-auto rounded-lg border border-border">
+        <table className="w-full text-sm">
+          <tbody>
+            {cancelGroups.map((g) => (
+              <Fragment key={g.group}>
+                <tr className="bg-muted/40">
+                  <td colSpan={2} className="px-3 py-1.5">
+                    <span className="flex flex-wrap items-center gap-2">
+                      {groupMeta[g.group].support && <AlertTriangle className="size-3.5 text-red-400" />}
+                      <span className="font-medium text-foreground">{g.label}</span>
+                      <span className="text-xs text-muted-foreground">· {g.leadCount} · {BRL(g.totalCanceledValue)}</span>
+                      <PlayChip g={g} />
+                    </span>
+                  </td>
+                </tr>
+                {g.leads.map((l) => (
+                  <tr key={l.email} className="border-b border-border last:border-0 hover:bg-accent/40">
+                    <td className="px-3 py-1.5">
+                      <div className="text-foreground">{l.name}</div>
+                      <div className="text-xs text-muted-foreground">{l.email} · {l.product}</div>
+                    </td>
+                    <td className="px-3 py-1.5 text-right tabular-nums text-foreground">{BRL(l.value)}</td>
+                  </tr>
+                ))}
+              </Fragment>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <GradientCTA label="Exportar por motivo · opt-in" />
+    </CancelFrame>
+  );
+}
+
+/* ── X5 — Métrica + ranking ─────────────────────────────────────────── */
+function XV5Metric() {
+  const max = Math.max(...cancelGroups.map((g) => g.leadCount));
+  return (
+    <CancelFrame>
+      <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+        Valor estornado a resgatar · 60 dias
+      </p>
+      <div className="mt-2">
+        <span className="gradient-text text-5xl font-bold tracking-tight">{BRL(23128)}</span>
+      </div>
+      <p className="mt-1 text-sm text-muted-foreground">24 pessoas · 5 motivos · 31 compras canceladas</p>
+      <div className="mt-5 flex flex-col gap-3.5">
+        {cancelGroups.map((g) => (
+          <div key={g.group}>
+            <div className="mb-1 flex items-center justify-between gap-2 text-sm">
+              <span className="flex items-center gap-1.5 text-foreground">
+                {groupMeta[g.group].support && <AlertTriangle className="size-3.5 text-red-400" />}
+                {g.label}
+              </span>
+              <span className="shrink-0 tabular-nums text-muted-foreground">{g.leadCount}</span>
+            </div>
+            <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+              <div className={cn("h-full rounded-full bg-gradient-to-r", groupMeta[g.group].bar)} style={{ width: `${(g.leadCount / max) * 100}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <GradientCTA label="Ver detalhamento por motivo" />
+    </CancelFrame>
+  );
+}
+
+function CanceledPurchaseResult() {
+  return (
+    <div className="flex flex-col gap-9">
+      <Variation n={1} title="Grupos por motivo"><XV1Groups /></Variation>
+      <Variation n={2} title="Funil + grupos"><XV2Funnel /></Variation>
+      <Variation n={3} title="Barras por motivo"><XV3Bars /></Variation>
+      <Variation n={4} title="Tabela agrupada"><XV4Table /></Variation>
+      <Variation n={5} title="Métrica + ranking"><XV5Metric /></Variation>
+    </div>
+  );
+}
+
 /** Registro: id do componente → componente de resultado. */
 export const resultComponents: Record<string, ComponentType> = {
   "card-declined-recovery-list": CardDeclinedRecoveryResult,
   "pending-pix-boleto-by-day": BoletoPendingByDayResult,
   "checkout-abandonment-by-product": CheckoutAbandonmentResult,
+  "canceled-purchase-not-returned": CanceledPurchaseResult,
 };
 
 export function getResultComponent(id: string): ComponentType | undefined {

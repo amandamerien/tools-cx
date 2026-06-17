@@ -5,6 +5,7 @@
 import listaRecuperacaoCartao from "@/content/playbooks/analise/lista-de-recuperacao-de-cartao.md?raw";
 import boletoPendentePixPorDia from "@/content/playbooks/analise/boleto-pendente-pix-por-dia.md?raw";
 import abandonoCarrinhoPorProduto from "@/content/playbooks/analise/abandono-de-carrinho-por-produto.md?raw";
+import compraCanceladaNaoDevolvida from "@/content/playbooks/analise/compra-cancelada-nao-devolvida.md?raw";
 
 export interface Playbook {
   /** Rótulo do grupo (ex: "Resgate · recuperação de vendas") */
@@ -125,6 +126,39 @@ export const playbooks: Record<string, Playbook> = {
     ],
     body: abandonoCarrinhoPorProduto,
     resultId: "checkout-abandonment-by-product",
+  },
+
+  "/analise/resgate-recuperacao-de-vendas/compra-cancelada-nao-devolvida": {
+    group: "Resgate · recuperação de vendas",
+    groupEmoji: "💳",
+    agent: "Rebeca",
+    title: "compra cancelada — não devolvida",
+    summary:
+      "Utilize quando o usuário solicitar leads cuja compra foi reembolsada ou contestada recentemente e que não compraram nada desde então, agrupados por motivo de cancelamento.",
+    gatilhos: [
+      "compra cancelada",
+      "estornou e não voltou",
+      "não voltou a comprar",
+      "cancelou e sumiu",
+      "estorno",
+      "Reembolsado e não devolvido",
+    ],
+    perguntas: [
+      "Quem teve compra cancelada nos últimos 60 dias e não voltou a comprar nada?",
+      "Lista de quem estornou e nunca mais comprou — agrupa por motivo.",
+      "Quais clientes pediram reembolso e sumiram? Quero atacar por motivo.",
+      "Me mostra quem cancelou a compra e não voltou, separado por dor (preço, expectativa, acesso).",
+      "Estornos dos últimos 60 dias de quem não recomprou — quem são?",
+    ],
+    ferramentas: [
+      "painel_minhas_vendas",
+      "lista_de_assinaturas",
+      "transações_obter",
+      "pergunta",
+      "executar",
+    ],
+    body: compraCanceladaNaoDevolvida,
+    resultId: "canceled-purchase-not-returned",
   },
 };
 
